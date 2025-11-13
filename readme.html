@@ -1,0 +1,156 @@
+✅ README.md — SkillSynth (MVP)
+
+Generador inteligente de habilidades + mapa de aprendizaje personalizado
+
+🎼 SkillSynth – Compositor de habilidades
+
+SkillSynth es una herramienta inteligente que toma las habilidades actuales del usuario, su objetivo profesional y su nivel actual, y genera un plan de aprendizaje personalizado, organizado como si fuera una composición musical:
+
+Instrumentos → habilidades actuales
+
+Notas → micro-skills
+
+Secciones → roadmap
+
+Partitura final → plan ejecutable
+
+Este es el MVP del proyecto: una versión simple, rápida y funcional que permite generar rutas de aprendizaje usando IA (OpenAI).
+
+🚀 Características del MVP
+
+Ingreso de habilidad actual
+
+Ingreso de objetivo o skill final
+
+Selección de nivel (Principiante / Intermedio / Avanzado)
+
+Envío a la API de OpenAI
+
+Generación automática de:
+
+Explicación del “salto” entre habilidades
+
+Micro-skills necesarias
+
+Mapa de ruta (roadmap) por bloques
+
+Acciones recomendadas
+
+Ejercicios
+
+Recursos sugeridos (opcional)
+
+🧩 Tecnologías utilizadas
+
+Next.js 14 / React
+
+TailwindCSS
+
+OpenAI API (gpt-4.1 o gpt-4.1-mini)
+
+TypeScript
+
+Vercel (opcional para deploy)
+
+📁 Estructura del proyecto
+/skillsynth
+ ├── app/
+ │   ├── api/
+ │   │   └── generate/route.ts
+ │   ├── components/
+ │   │   ├── InputCard.tsx
+ │   │   └── ResultCard.tsx
+ │   └── page.tsx
+ ├── styles/
+ │   └── globals.css
+ ├── public/
+ ├── package.json
+ ├── tailwind.config.js
+ ├── postcss.config.js
+ └── tsconfig.json
+
+🛠️ Instalación y uso
+1. Clonar el proyecto
+git clone https://github.com/tuUsuario/SkillSynth
+cd SkillSynth
+
+2. Instalar dependencias
+npm install
+
+3. Crear .env.local
+
+En la raíz del proyecto, crear un archivo:
+
+OPENAI_API_KEY=tu_api_key
+
+
+⚠️ No subir este archivo al repo.
+
+4. Ejecutar el proyecto
+npm run dev
+
+5. Abrir en el navegador
+http://localhost:3000
+
+🧠 Cómo funciona internamente
+
+El usuario completa los campos:
+
+Habilidad actual
+
+Objetivo
+
+Nivel
+
+El front envía estos datos al endpoint:
+
+/api/generate
+
+
+El endpoint llama a la API de OpenAI.
+
+OpenAI devuelve un roadmap completo optimizado según el nivel.
+
+El frontend lo muestra en tarjetas (cards).
+
+📦 Endpoint principal
+POST /api/generate
+
+Ejemplo de body:
+
+{
+  "fromSkill": "Excel básico",
+  "toSkill": "Analista de datos",
+  "level": "Principiante"
+}
+
+
+Respuesta:
+
+roadmap, micro-skills, ejercicios, recomendaciones
+
+🔮 Visión futura (post-MVP)
+
+Dashboard con historial de rutas generadas
+
+Exportar roadmap (PDF / Notion / Google Calendar)
+
+Integración con API de YouTube para recursos reales
+
+Sistema de niveles gamificado
+
+Sugerencias automáticas según mercado laboral
+
+Match entre habilidades + posibles profesiones futuras
+
+Versión móvil (React Native)
+
+👨‍💻 Autor
+
+Luigi Silveyra
+Creador de SkillSynth
+Argentina, 2025
+
+📄 Licencia
+
+MIT License – libre uso, modificación y distribución.
