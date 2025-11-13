@@ -1,5 +1,5 @@
 import { useState } from "react";
-import SkillCard from "@/components/SkillCard";
+import SkillCard from '../components/SkillCard';
 
 export default function Create() {
   const [habilidades, setHabilidades] = useState("");
