@@ -1,4 +1,6 @@
+// /pages/api/compose.js
 import OpenAI from "openai";
+import { checkRateLimit } from "../../lib/rateLimit";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -7,6 +9,27 @@ const client = new OpenAI({
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
+  }
+
+  // 🔐 RATE LIMIT POR IP (máx. 3 por día)
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.socket.remoteAddress ||
+    "unknown";
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const { allowed } = checkRateLimit({
+    ip,
+    maxRequests: 3, // 👉 máximo 3 usos por IP por día
+    windowMs: DAY_MS
+  });
+
+  if (!allowed) {
+    return res.status(429).json({
+      error:
+        "Has alcanzado el límite diario de generación gratuita. Volvé mañana o esperá unas horas."
+    });
   }
 
   const { habilidades, objetivo, industria, tiempo } = req.body || {};
@@ -75,6 +98,7 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
       json = JSON.parse(cleaned);
     }
 
+    // 🔁 IMPORTANTE: mantenemos la misma estructura de respuesta que ya usabas
     return res.status(200).json(json);
   } catch (error) {
     console.error("Error en /api/compose:", error);
