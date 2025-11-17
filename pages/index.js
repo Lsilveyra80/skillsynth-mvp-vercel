@@ -5,6 +5,7 @@ import PricingSection from "../components/PricingSection";
 
 export default function Home() {
   const [lang, setLang] = useState("es");
+
   const isEs = lang === "es";
 
   return (
