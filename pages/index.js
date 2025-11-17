@@ -119,5 +119,3 @@ export default function Home() {
       {/* SECCIÓN DE PRECIOS */}
       <PricingSection langProp={lang} onLangChange={setLang} />
     </main>
-  );
-}
