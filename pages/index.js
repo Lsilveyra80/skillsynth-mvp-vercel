@@ -5,7 +5,6 @@ import PricingSection from "../components/PricingSection";
 
 export default function Home() {
   const [lang, setLang] = useState("es");
-
   const isEs = lang === "es";
 
   return (
@@ -119,3 +118,5 @@ export default function Home() {
       {/* SECCIÓN DE PRECIOS */}
       <PricingSection langProp={lang} onLangChange={setLang} />
     </main>
+  );
+}
