@@ -283,8 +283,3 @@ export default function PricingSection({ langProp, onLangChange }) {
     </section>
   );
 }
-
-    <section className="bg-slate-950 text-slate-50 py-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center gap-4 mb-12
