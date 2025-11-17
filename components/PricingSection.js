@@ -19,7 +19,7 @@ const plans = {
       ],
       cta: "Empezar gratis",
       ctaNote: "No requiere tarjeta",
-      href: "#", // acá puedes poner un link a tu registro gratuito
+      href: "#",
       type: "free",
     },
     {
@@ -39,7 +39,7 @@ const plans = {
       ],
       cta: "Comprar en PESOS",
       ctaNote: "Pago con MercadoPago",
-      href: "https://tu-link-de-mercadopago.com", // 👉 reemplaza por tu link real
+      href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
       type: "ars",
     },
     {
@@ -59,7 +59,7 @@ const plans = {
       ],
       cta: "Comprar en USD",
       ctaNote: "Stripe o PayPal",
-      href: "https://tu-link-de-stripe-pro.com", // 👉 reemplaza por tu link real
+      href: "https://tu-link-de-stripe-pro.com", // 👉 reemplazar
       type: "usd",
     },
     {
@@ -79,7 +79,7 @@ const plans = {
       ],
       cta: "Hablar con ventas",
       ctaNote: "Contactanos para más detalles",
-      href: "mailto:ventas@tudominio.com", // 👉 o un formulario de contacto
+      href: "mailto:ventas@tudominio.com", // 👉 reemplazar
       type: "usd",
     },
   ],
@@ -120,7 +120,7 @@ const plans = {
       ],
       cta: "Pay in PESOS",
       ctaNote: "Pay with MercadoPago",
-      href: "https://tu-link-de-mercadopago.com", // same as ES
+      href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
       type: "ars",
     },
     {
@@ -140,7 +140,7 @@ const plans = {
       ],
       cta: "Pay in USD",
       ctaNote: "Stripe or PayPal",
-      href: "https://tu-link-de-stripe-pro.com",
+      href: "https://tu-link-de-stripe-pro.com", // 👉 reemplazar
       type: "usd",
     },
     {
@@ -160,14 +160,18 @@ const plans = {
       ],
       cta: "Talk to sales",
       ctaNote: "Contact us for details",
-      href: "mailto:sales@yourdomain.com",
+      href: "mailto:sales@yourdomain.com", // 👉 reemplazar
       type: "usd",
     },
   ],
 };
 
-export default function PricingSection() {
-  const [lang, setLang] = useState("es");
+export default function PricingSection({ langProp, onLangChange }) {
+  const [internalLang, setInternalLang] = useState("es");
+
+  const lang = langProp || internalLang;
+  const setLang = onLangChange || setInternalLang;
+
   const currentPlans = plans[lang];
 
   return (
@@ -219,8 +223,7 @@ export default function PricingSection() {
           {currentPlans.map((plan) => (
             <div
               key={plan.name + lang}
-              className={`relative flex flex-col rounded-2xl border bg-slate-900/60 px-6 pb-6 pt-8 shadow-lg shadow-slate-950/40
-              ${
+              className={`relative flex flex-col rounded-2xl border bg-slate-900/60 px-6 pb-6 pt-8 shadow-lg shadow-slate-950/40 ${
                 plan.highlight
                   ? "border-cyan-400/80 ring-2 ring-cyan-400/40"
                   : "border-slate-800"
@@ -253,8 +256,7 @@ export default function PricingSection() {
 
               <a
                 href={plan.href}
-                className={`mt-auto inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition
-                ${
+                className={`mt-auto inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition ${
                   plan.highlight
                     ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                     : "bg-slate-100 text-slate-900 hover:bg-white"
@@ -271,7 +273,7 @@ export default function PricingSection() {
           ))}
         </div>
 
-        {/* Little legal / clarification text */}
+        {/* aclaración legal */}
         <p className="mt-8 text-center text-xs text-slate-500 max-w-2xl mx-auto">
           {lang === "es"
             ? "Los precios en pesos argentinos se actualizan de forma periódica según la inflación y pueden cambiar sin previo aviso. Los precios en dólares están pensados para clientes fuera de Argentina."
@@ -282,8 +284,6 @@ export default function PricingSection() {
   );
 }
 
-
-  return (
     <section className="bg-slate-950 text-slate-50 py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
