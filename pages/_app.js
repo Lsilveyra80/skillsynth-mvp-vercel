@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import Script from "next/script";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -20,8 +21,11 @@ export default function MyApp({ Component, pageProps }) {
         `}
       </Script>
 
-      {/* Tu app */}
+      {/* Tu aplicación */}
       <Component {...pageProps} />
+
+      {/* Vercel Analytics */}
+      <Analytics />
     </>
   );
 }
