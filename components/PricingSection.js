@@ -43,9 +43,9 @@ const plans = {
       type: "ars",
     },
     {
-      name: "Pro USD",
-      tag: "Ideal para creadores globales",
-      price: "US$ 12",
+      name: "Pro ARS",
+      tag: "Ideal para creadores avanzados",
+      price: "ARS 16.800",
       period: "/ mes",
       highlight: false,
       description: "Para quienes usan SkillSynth todos los días.",
@@ -57,15 +57,15 @@ const plans = {
         "Uso comercial incluido",
         "Acceso anticipado a nuevas funciones",
       ],
-      cta: "Comprar en USD",
-      ctaNote: "Stripe o PayPal",
-      href: "https://tu-link-de-stripe-pro.com", // 👉 reemplazar
-      type: "usd",
+      cta: "Comprar en PESOS",
+      ctaNote: "Pago con MercadoPago",
+      href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
+      type: "ars",
     },
     {
       name: "Agency / Ultimate",
       tag: "Para equipos y agencias",
-      price: "US$ 29",
+      price: "ARS 40.600",
       period: "/ mes",
       highlight: false,
       description: "Para estudios, agencias y negocios que escalan.",
@@ -80,7 +80,7 @@ const plans = {
       cta: "Hablar con ventas",
       ctaNote: "Contactanos para más detalles",
       href: "mailto:ventas@tudominio.com", // 👉 reemplazar
-      type: "usd",
+      type: "ars",
     },
   ],
   en: [
@@ -276,10 +276,11 @@ export default function PricingSection({ langProp, onLangChange }) {
         {/* aclaración legal */}
         <p className="mt-8 text-center text-xs text-slate-500 max-w-2xl mx-auto">
           {lang === "es"
-            ? "Los precios en pesos argentinos se actualizan de forma periódica según la inflación y pueden cambiar sin previo aviso. Los precios en dólares están pensados para clientes fuera de Argentina."
-            : "Prices in Argentine pesos are periodically adjusted based on inflation and may change without notice. USD prices are intended for customers outside Argentina."}
+            ? "Los precios en pesos argentinos se actualizan de forma periódica según la inflación y pueden cambiar sin previo aviso."
+            : "Prices in Argentine pesos are periodically adjusted based on inflation and may change without notice."}
         </p>
       </div>
     </section>
   );
 }
+
