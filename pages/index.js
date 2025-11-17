@@ -1,3 +1,4 @@
+import PricingSection from "@/components/PricingSection";
 import Link from "next/link";
 
 export default function Home() {
@@ -25,7 +26,7 @@ export default function Home() {
             Crear mi SkillSynth
           </Link>
         </div>
-
+        <PricingSection />      
         <div className="mt-10 grid gap-4 md:grid-cols-3 text-left text-sm text-slate-300">
           <div className="rounded-2xl border border-slate-800 p-4 bg-slate-900/40">
             <p className="font-semibold mb-1">Hibridación de habilidades</p>
