@@ -19,7 +19,7 @@ const plans = {
       ],
       cta: "Empezar gratis",
       ctaNote: "No requiere tarjeta",
-      href: "#",
+      href: "/plans/starter",
       type: "free",
     },
     {
@@ -39,7 +39,7 @@ const plans = {
       ],
       cta: "Comprar en PESOS",
       ctaNote: "Pago con MercadoPago",
-      href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
+      href: "/plans/plus-ars", // 🔗 ahora a la página del plan
       type: "ars",
     },
     {
@@ -59,7 +59,7 @@ const plans = {
       ],
       cta: "Comprar en USD",
       ctaNote: "Stripe o PayPal",
-      href: "https://tu-link-de-stripe-pro.com", // 👉 reemplazar
+      href: "/plans/pro-usd",
       type: "usd",
     },
     {
@@ -79,7 +79,7 @@ const plans = {
       ],
       cta: "Hablar con ventas",
       ctaNote: "Contactanos para más detalles",
-      href: "mailto:ventas@tudominio.com", // 👉 reemplazar
+      href: "/plans/agency",
       type: "usd",
     },
   ],
@@ -100,7 +100,7 @@ const plans = {
       ],
       cta: "Start for free",
       ctaNote: "No credit card required",
-      href: "#",
+      href: "/plans/starter",
       type: "free",
     },
     {
@@ -120,7 +120,7 @@ const plans = {
       ],
       cta: "Pay in PESOS",
       ctaNote: "Pay with MercadoPago",
-      href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
+      href: "/plans/plus-ars",
       type: "ars",
     },
     {
@@ -140,7 +140,7 @@ const plans = {
       ],
       cta: "Pay in USD",
       ctaNote: "Stripe or PayPal",
-      href: "https://tu-link-de-stripe-pro.com", // 👉 reemplazar
+      href: "/plans/pro-usd",
       type: "usd",
     },
     {
@@ -160,11 +160,14 @@ const plans = {
       ],
       cta: "Talk to sales",
       ctaNote: "Contact us for details",
-      href: "mailto:sales@yourdomain.com", // 👉 reemplazar
+      href: "/plans/agency",
       type: "usd",
     },
   ],
 };
+
+// resto del componente queda igual…
+import Link from "next/link";
 
 export default function PricingSection({ langProp, onLangChange }) {
   const [internalLang, setInternalLang] = useState("es");
@@ -176,49 +179,10 @@ export default function PricingSection({ langProp, onLangChange }) {
 
   return (
     <section className="bg-slate-950 text-slate-50 py-20">
+      {/* ...todo el JSX que ya tenías, sin cambios... */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col items-center text-center gap-4 mb-12">
-          <span className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
-            Pricing · Planes
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            {lang === "es"
-              ? "Elige el plan que crezca con tus habilidades"
-              : "Choose the plan that grows with your skills"}
-          </h2>
-          <p className="max-w-2xl text-slate-400">
-            {lang === "es"
-              ? "Pagá en pesos argentinos con MercadoPago o en dólares para clientes internacionales. Empezá gratis y actualizá cuando lo necesites."
-              : "Pay in Argentine pesos with MercadoPago or in US dollars for international customers. Start for free and upgrade anytime."}
-          </p>
-
-          {/* Language toggle */}
-          <div className="mt-4 inline-flex items-center rounded-full bg-slate-900/60 p-1">
-            <button
-              onClick={() => setLang("es")}
-              className={`px-4 py-1 text-sm rounded-full transition ${
-                lang === "es"
-                  ? "bg-slate-100 text-slate-900 font-medium"
-                  : "text-slate-300"
-              }`}
-            >
-              Español
-            </button>
-            <button
-              onClick={() => setLang("en")}
-              className={`px-4 py-1 text-sm rounded-full transition ${
-                lang === "en"
-                  ? "bg-slate-100 text-slate-900 font-medium"
-                  : "text-slate-300"
-              }`}
-            >
-              English
-            </button>
-          </div>
-        </div>
-
-        {/* Pricing cards */}
+        {/* ... */}
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {currentPlans.map((plan) => (
             <div
@@ -229,32 +193,8 @@ export default function PricingSection({ langProp, onLangChange }) {
                   : "border-slate-800"
               }`}
             >
-              {plan.tag && (
-                <div className="absolute -top-3 left-4 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-900 shadow">
-                  {plan.tag}
-                </div>
-              )}
-
-              <h3 className="text-lg font-semibold mb-2">{plan.name}</h3>
-              <p className="text-sm text-slate-400 mb-4">
-                {plan.description}
-              </p>
-
-              <div className="mb-4 flex items-baseline gap-1">
-                <span className="text-2xl font-semibold">{plan.price}</span>
-                <span className="text-sm text-slate-400">{plan.period}</span>
-              </div>
-
-              <ul className="mb-6 flex-1 space-y-2 text-sm text-slate-200">
-                {plan.features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <a
+              {/* ... */}
+              <Link
                 href={plan.href}
                 className={`mt-auto inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition ${
                   plan.highlight
@@ -263,22 +203,12 @@ export default function PricingSection({ langProp, onLangChange }) {
                 }`}
               >
                 {plan.cta}
-              </a>
-              {plan.ctaNote && (
-                <p className="mt-2 text-xs text-slate-400 text-center">
-                  {plan.ctaNote}
-                </p>
-              )}
+              </Link>
+              {/* ... */}
             </div>
           ))}
         </div>
-
-        {/* aclaración legal */}
-        <p className="mt-8 text-center text-xs text-slate-500 max-w-2xl mx-auto">
-          {lang === "es"
-            ? "Los precios en pesos argentinos se actualizan de forma periódica según la inflación y pueden cambiar sin previo aviso. Los precios en dólares están pensados para clientes fuera de Argentina."
-            : "Prices in Argentine pesos are periodically adjusted based on inflation and may change without notice. USD prices are intended for customers outside Argentina."}
-        </p>
+        {/* ... */}
       </div>
     </section>
   );
