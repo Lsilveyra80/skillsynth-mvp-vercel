@@ -1,4 +1,4 @@
-import PricingSection from "@/components/PricingSection";
+import PricingSection from "../components/PricingSection";
 import Link from "next/link";
 
 export default function Home() {
