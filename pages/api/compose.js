@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { checkRateLimit } from "../../lib/rateLimit";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export default async function handler(req, res) {
@@ -11,24 +11,29 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  // 🔐 RATE LIMIT POR IP (máx. 3 por día)
+  // 🔐 IDENTIFICAR IP DEL USUARIO
   const ip =
     req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
     req.socket.remoteAddress ||
     "unknown";
 
-  const DAY_MS = 24 * 60 * 60 * 1000;
+  // 🧩 LIMITACIÓN PLAN STARTER:
+  // Máximo 5 SkillSynth generadas en una ventana de 30 días por IP.
+  const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-  const { allowed } = checkRateLimit({
+  const { allowed, remaining, resetAt } = checkRateLimit({
     ip,
-    maxRequests: 3, // 👉 máximo 3 usos por IP por día
-    windowMs: DAY_MS
+    key: "starter-monthly", // por si en el futuro querés más planes/llaves
+    maxRequests: 5,
+    windowMs: MONTH_MS,
   });
 
   if (!allowed) {
     return res.status(429).json({
       error:
-        "Has alcanzado el límite diario de generación gratuita. Volvé mañana o esperá unas horas."
+        "Has alcanzado el límite de 5 SkillSynth del plan Starter en este período. Podés pasar al plan Plus o Pro para generar más habilidades.",
+      remaining: 0,
+      resetAt,
     });
   }
 
@@ -81,7 +86,7 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
     const completion = await client.chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7
+      temperature: 0.7,
     });
 
     const raw = completion.choices?.[0]?.message?.content || "{}";
@@ -98,13 +103,16 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
       json = JSON.parse(cleaned);
     }
 
-    // 🔁 IMPORTANTE: mantenemos la misma estructura de respuesta que ya usabas
+    // 👉 IMPORTANTE:
+    // En el frontend (create.js) ya se pisa siempre el último resultado:
+    // setResult(data);
+    // Eso significa que VISUALMENTE el usuario Starter solo ve el último proyecto generado.
+
     return res.status(200).json(json);
   } catch (error) {
     console.error("Error en /api/compose:", error);
     return res.status(500).json({
-      error: "Error al comunicarse con el modelo de IA."
+      error: "Error al comunicarse con el modelo de IA.",
     });
   }
 }
-
