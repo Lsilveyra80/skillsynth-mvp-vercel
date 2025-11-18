@@ -13,7 +13,6 @@ const plans = [
       "1 proyecto activo",
       "Exportación estándar",
       "Funcionalidades esenciales"
-      // Se quitó soporte por email estándar
     ],
     cta: "Empezar gratis",
     ctaNote: "No requiere tarjeta",
@@ -32,12 +31,11 @@ const plans = [
       "Proyectos ilimitados",
       "Sin marca de agua",
       "Procesamiento prioritario",
-      // Eliminado: "Actualización mensual según inflación",
       "Soporte por email"
     ],
     cta: "Comprar en PESOS",
     ctaNote: "Pago con MercadoPago",
-    href: "https://tu-link-de-mercadopago.com",
+    href: "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=1230df0521c548d2bca0729d6f293df8",
     type: "ars",
   },
   {
@@ -57,7 +55,7 @@ const plans = [
     ],
     cta: "Comprar en PESOS",
     ctaNote: "Pago con MercadoPago",
-    href: "https://tu-link-de-mercadopago.com",
+    href: "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=08a30c0db23f4e6587e70cf1e4cf6848",
     type: "ars",
   },
   {
@@ -66,7 +64,7 @@ const plans = [
     price: "ARS 40.600",
     period: "/ mes",
     highlight: false,
-    hidden: true, // 👈 ocultamos el plan
+    hidden: true, // oculto
     description: "Para estudios, agencias y negocios que escalan.",
     features: [
       "Todo lo del plan Pro",
@@ -84,13 +82,13 @@ const plans = [
 ];
 
 export default function PricingSection() {
-  // se filtran los planes ocultos (queda Starter, Plus y Pro)
+  // se filtran los planes ocultos
   const currentPlans = plans.filter((p) => !p.hidden);
 
   return (
     <section className="bg-slate-950 text-slate-50 py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+
         <div className="flex flex-col items-center text-center gap-4 mb-12">
           <span className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
             Pricing · Planes
@@ -140,6 +138,8 @@ export default function PricingSection() {
 
               <a
                 href={plan.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`mt-auto inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition ${
                   plan.highlight
                     ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300"
