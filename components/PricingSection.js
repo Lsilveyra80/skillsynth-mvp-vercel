@@ -9,11 +9,11 @@ const plans = [
     highlight: false,
     description: "Para probar SkillSynth sin compromiso.",
     features: [
-      "Hasta 15 tarjetas de habilidades al mes",
+      "Hasta 5 tarjetas de habilidades al mes",
       "1 proyecto activo",
-      "Exportación básica",
-      "Funcionalidades esenciales",
-      "Soporte por email estándar",
+      "Exportación estándar",
+      "Funcionalidades esenciales"
+      // Se quitó soporte por email estándar
     ],
     cta: "Empezar gratis",
     ctaNote: "No requiere tarjeta",
@@ -28,16 +28,16 @@ const plans = [
     highlight: true,
     description: "Para creadores y profesionales en Argentina.",
     features: [
-      "Hasta 150 tarjetas de habilidades al mes",
+      "Hasta 50 tarjetas de habilidades al mes",
       "Proyectos ilimitados",
       "Sin marca de agua",
       "Procesamiento prioritario",
-      "Actualización mensual según inflación",
-      "Soporte preferencial por email",
+      // Eliminado: "Actualización mensual según inflación",
+      "Soporte por email"
     ],
     cta: "Comprar en PESOS",
     ctaNote: "Pago con MercadoPago",
-    href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
+    href: "https://tu-link-de-mercadopago.com",
     type: "ars",
   },
   {
@@ -57,7 +57,7 @@ const plans = [
     ],
     cta: "Comprar en PESOS",
     ctaNote: "Pago con MercadoPago",
-    href: "https://tu-link-de-mercadopago.com", // 👉 reemplazar
+    href: "https://tu-link-de-mercadopago.com",
     type: "ars",
   },
   {
@@ -66,6 +66,7 @@ const plans = [
     price: "ARS 40.600",
     period: "/ mes",
     highlight: false,
+    hidden: true, // 👈 ocultamos el plan
     description: "Para estudios, agencias y negocios que escalan.",
     features: [
       "Todo lo del plan Pro",
@@ -77,18 +78,19 @@ const plans = [
     ],
     cta: "Hablar con ventas",
     ctaNote: "Contactanos para más detalles",
-    href: "mailto:ventas@tudominio.com", // 👉 reemplazar
+    href: "mailto:ventas@tudominio.com",
     type: "ars",
   },
 ];
 
 export default function PricingSection() {
-  const currentPlans = plans;
+  // se filtran los planes ocultos
+  const currentPlans = plans.filter((p) => !p.hidden);
 
   return (
     <section className="bg-slate-950 text-slate-50 py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        
         <div className="flex flex-col items-center text-center gap-4 mb-12">
           <span className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
             Pricing · Planes
@@ -102,7 +104,6 @@ export default function PricingSection() {
           </p>
         </div>
 
-        {/* Pricing cards */}
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {currentPlans.map((plan) => (
             <div
@@ -120,9 +121,7 @@ export default function PricingSection() {
               )}
 
               <h3 className="text-lg font-semibold mb-2">{plan.name}</h3>
-              <p className="text-sm text-slate-400 mb-4">
-                {plan.description}
-              </p>
+              <p className="text-sm text-slate-400 mb-4">{plan.description}</p>
 
               <div className="mb-4 flex items-baseline gap-1">
                 <span className="text-2xl font-semibold">{plan.price}</span>
@@ -148,6 +147,7 @@ export default function PricingSection() {
               >
                 {plan.cta}
               </a>
+
               {plan.ctaNote && (
                 <p className="mt-2 text-xs text-slate-400 text-center">
                   {plan.ctaNote}
@@ -157,7 +157,6 @@ export default function PricingSection() {
           ))}
         </div>
 
-        {/* aclaración legal */}
         <p className="mt-8 text-center text-xs text-slate-500 max-w-2xl mx-auto">
           Los precios en pesos argentinos se actualizan de forma periódica según
           la inflación y pueden cambiar sin previo aviso.
@@ -166,6 +165,3 @@ export default function PricingSection() {
     </section>
   );
 }
-
-
-
