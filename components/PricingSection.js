@@ -84,13 +84,13 @@ const plans = [
 ];
 
 export default function PricingSection() {
-  // se filtran los planes ocultos
+  // se filtran los planes ocultos (queda Starter, Plus y Pro)
   const currentPlans = plans.filter((p) => !p.hidden);
 
   return (
     <section className="bg-slate-950 text-slate-50 py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+        {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 mb-12">
           <span className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
             Pricing · Planes
@@ -104,7 +104,8 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {/* Pricing cards centradas */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
           {currentPlans.map((plan) => (
             <div
               key={plan.name}
