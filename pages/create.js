@@ -1,13 +1,28 @@
 // pages/create.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import Link from "next/link";
 
 export default function CreatePage() {
+  const router = useRouter();
+  const queryPlan = router.query.plan;
+
+  // Estado inicial por defecto
+  const [plan, setPlan] = useState("starter");
+
+  // Cuando llega el plan por query param lo sincronizamos
+  useEffect(() => {
+    if (!queryPlan) return;
+    const validPlans = ["starter", "plus", "pro"];
+    if (validPlans.includes(queryPlan)) {
+      setPlan(queryPlan);
+    }
+  }, [queryPlan]);
+
   const [habilidades, setHabilidades] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [industria, setIndustria] = useState("");
   const [tiempo, setTiempo] = useState("");
-  const [plan, setPlan] = useState("starter"); // starter | plus | pro
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -36,14 +51,13 @@ export default function CreatePage() {
           objetivo,
           industria,
           tiempo,
-          plan, // 👈 acá va el plan elegido
+          plan, // ← Se envía el plan al backend
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Manejo de errores del backend (incluye 429 por límite)
         setErrorMsg(
           data?.error ||
             "Ocurrió un error al generar tu SkillSynth. Intenta nuevamente."
@@ -51,7 +65,6 @@ export default function CreatePage() {
         return;
       }
 
-      // Guardamos el resultado de la SkillSynth
       setResult(data);
     } catch (err) {
       console.error(err);
@@ -67,9 +80,7 @@ export default function CreatePage() {
         <Link href="/" className="text-sm text-slate-400 hover:text-slate-200">
           ← Volver al inicio
         </Link>
-        <span className="text-xs text-slate-500">
-          Beta • Generador de SkillSynth
-        </span>
+        <span className="text-xs text-slate-500">Beta • Generador IA</span>
       </header>
 
       <section className="max-w-4xl mx-auto pt-4 pb-16">
@@ -134,23 +145,21 @@ export default function CreatePage() {
             <p>
               Estás usando el plan <span className="font-semibold">Starter</span>
               . Tenés hasta{" "}
-              <span className="font-semibold">5 tarjetas</span> de habilidades
-              por mes.
+              <span className="font-semibold">5 tarjetas</span> por mes.
             </p>
           )}
           {plan === "plus" && (
             <p>
               Estás usando el plan <span className="font-semibold">Plus</span>.
               Tenés hasta{" "}
-              <span className="font-semibold">50 tarjetas</span> de habilidades
-              por mes.
+              <span className="font-semibold">50 tarjetas</span> por mes.
             </p>
           )}
           {plan === "pro" && (
             <p>
               Estás usando el plan <span className="font-semibold">Pro</span>.
-              Podés generar <span className="font-semibold">tarjetas
-              ilimitadas</span> (sujeto a uso razonable).
+              Podés generar{" "}
+              <span className="font-semibold">tarjetas ilimitadas</span>.
             </p>
           )}
         </div>
@@ -187,7 +196,7 @@ export default function CreatePage() {
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              ¿En qué industrias o temas te gustaría moverte?
+              ¿En qué industrias te gustaría moverte?
             </label>
             <input
               className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
@@ -266,9 +275,7 @@ export default function CreatePage() {
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-semibold text-slate-100">
-                  Tareas típicas
-                </h3>
+                <h3 className="font-semibold text-slate-100">Tareas típicas</h3>
                 <ul className="list-disc list-inside text-slate-300">
                   {result.tasks?.map((t, i) => (
                     <li key={i}>{t}</li>
