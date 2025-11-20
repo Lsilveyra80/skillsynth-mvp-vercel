@@ -1,4 +1,4 @@
-// /pages/create.js
+// pages/create.js
 import { useState } from "react";
 import Link from "next/link";
 
@@ -69,11 +69,11 @@ export default function CreatePage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 px-4">
+      {/* HEADER */}
       <header className="max-w-4xl mx-auto pt-6 flex items-center justify-between">
         <Link href="/" className="text-sm text-slate-400 hover:text-slate-200">
           ← Volver al inicio
         </Link>
-        <span className="text-xs text-slate-500">Beta • Generador IA</span>
       </header>
 
       <section className="max-w-4xl mx-auto pt-4 pb-16">
@@ -145,7 +145,7 @@ export default function CreatePage() {
           o Pro cuando quieras.
         </p>
 
-        {/* Formulario */}
+        {/* FORMULARIO */}
         <form
           onSubmit={handleSubmit}
           className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 md:p-6"
@@ -219,7 +219,7 @@ export default function CreatePage() {
           </div>
         </form>
 
-        {/* BLOQUE DE UPGRADE CUANDO LLEGA AL LÍMITE */}
+        {/* UPGRADE BLOQUE AL LLEGAR AL LÍMITE */}
         {showUpgrade && (
           <section className="mt-6 rounded-2xl border border-amber-500 bg-amber-950/40 p-4 md:p-6">
             <h2 className="text-lg font-semibold text-amber-100 mb-2">
@@ -266,7 +266,7 @@ export default function CreatePage() {
           </section>
         )}
 
-        {/* Resultado */}
+        {/* RESULTADO */}
         {result && (
           <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
             <h2 className="text-xl font-semibold mb-2">
