@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  // 🔐 IDENTIFICAR IP DEL USUARIO
+  // 🔐 IDENTIFICAR IP
   const ip =
     req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
     req.socket.remoteAddress ||
@@ -20,52 +20,33 @@ export default async function handler(req, res) {
   // ⏱ Ventana mensual (30 días)
   const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-  // 📦 Leer campos del body (incluyendo plan)
-  const { habilidades, objetivo, industria, tiempo, plan } = req.body || {};
+  // 📦 Datos que vienen del frontend
+  const { habilidades, objetivo, industria, tiempo } = req.body || {};
 
   if (!habilidades || !objetivo || !industria || !tiempo) {
     return res.status(400).json({ error: "Faltan campos obligatorios." });
   }
 
-  // 🧾 Normalizar plan (starter | plus | pro)
-  const validPlans = ["starter", "plus", "pro"];
-  const userPlan = validPlans.includes(plan) ? plan : "starter";
+  // 🔒 Por ahora TODOS son plan Starter
+  const userPlan = "starter";
+  const planLabel = "Starter";
+  const maxRequests = 5; // 5 tarjetas por mes en el plan Starter
 
-  // 🎯 Definir límites por plan
-  // Starter: 5 tarjetas / mes
-  // Plus: 50 tarjetas / mes
-  // Pro: ilimitado (no aplica rate limit)
-  let maxRequests = null;
-  let planLabel = "";
+  // 🧩 Rate limit mensual por IP
+  const { allowed, remaining, resetAt } = checkRateLimit({
+    ip,
+    key: `${userPlan}-monthly`,
+    maxRequests,
+    windowMs: MONTH_MS,
+  });
 
-  if (userPlan === "starter") {
-    maxRequests = 5;
-    planLabel = "Starter";
-  } else if (userPlan === "plus") {
-    maxRequests = 50;
-    planLabel = "Plus";
-  } else if (userPlan === "pro") {
-    maxRequests = null; // ilimitado (sin rate limit)
-    planLabel = "Pro";
-  }
-
-  // 🧩 Aplicar rate limit solo si el plan NO es Pro
-  if (maxRequests !== null) {
-    const { allowed, remaining, resetAt } = checkRateLimit({
-      ip,
-      key: `${userPlan}-monthly`, // ej: "starter-monthly", "plus-monthly"
-      maxRequests,
-      windowMs: MONTH_MS,
+  if (!allowed) {
+    return res.status(429).json({
+      error: `Alcanzaste el límite de ${maxRequests} SkillSynth del plan ${planLabel}. Para seguir generando tarjetas, podés pasar al plan Plus o Pro.`,
+      remaining: 0,
+      resetAt,
+      plan: userPlan,
     });
-
-    if (!allowed) {
-      return res.status(429).json({
-        error: `Has alcanzado el límite mensual de ${maxRequests} SkillSynth del plan ${planLabel}. Podés pasar a un plan superior para generar más habilidades.`,
-        remaining: 0,
-        resetAt,
-        plan: userPlan,
-      });
-    }
   }
 
   const prompt = `
@@ -120,7 +101,6 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
     try {
       json = JSON.parse(raw);
     } catch (e) {
-      // Intento limpiar si viene con código o texto extra
       const cleaned = raw
         .replace(/```json/g, "")
         .replace(/```/g, "")
@@ -128,14 +108,10 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
       json = JSON.parse(cleaned);
     }
 
-    // 👉 IMPORTANTE:
-    // En el frontend (create.js) ya se pisa siempre el último resultado:
-    // setResult(data);
-    // Eso significa que VISUALMENTE el usuario Starter solo ve el último proyecto generado.
-
     return res.status(200).json({
       ...json,
-      plan: userPlan, // opcional: para que el frontend sepa con qué plan se generó
+      plan: userPlan,
+      remaining, // por si después querés mostrar "te quedan X intentos"
     });
   } catch (error) {
     console.error("Error en /api/compose:", error);
