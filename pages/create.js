@@ -1,24 +1,8 @@
-// pages/create.js
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+// /pages/create.js
+import { useState } from "react";
 import Link from "next/link";
 
 export default function CreatePage() {
-  const router = useRouter();
-  const queryPlan = router.query.plan;
-
-  // Estado inicial por defecto
-  const [plan, setPlan] = useState("starter");
-
-  // Cuando llega el plan por query param lo sincronizamos
-  useEffect(() => {
-    if (!queryPlan) return;
-    const validPlans = ["starter", "plus", "pro"];
-    if (validPlans.includes(queryPlan)) {
-      setPlan(queryPlan);
-    }
-  }, [queryPlan]);
-
   const [habilidades, setHabilidades] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [industria, setIndustria] = useState("");
@@ -27,14 +11,21 @@ export default function CreatePage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [result, setResult] = useState(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  const MP_PLUS_URL =
+    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=1230df0521c548d2bca0729d6f293df8";
+  const MP_PRO_URL =
+    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=08a30c0db23f4e6587e70cf1e4cf6848";
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErrorMsg("");
     setResult(null);
+    setShowUpgrade(false);
 
     if (!habilidades || !objetivo || !industria || !tiempo) {
-      setErrorMsg("Por favor completa todos los campos.");
+      setErrorMsg("Por favor completá todos los campos.");
       return;
     }
 
@@ -51,16 +42,18 @@ export default function CreatePage() {
           objetivo,
           industria,
           tiempo,
-          plan, // ← Se envía el plan al backend
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429) {
+          setShowUpgrade(true);
+        }
         setErrorMsg(
           data?.error ||
-            "Ocurrió un error al generar tu SkillSynth. Intenta nuevamente."
+            "Ocurrió un error al generar tu SkillSynth. Intentá nuevamente."
         );
         return;
       }
@@ -68,7 +61,7 @@ export default function CreatePage() {
       setResult(data);
     } catch (err) {
       console.error(err);
-      setErrorMsg("Error de conexión. Intenta nuevamente en unos minutos.");
+      setErrorMsg("Error de conexión. Intentá nuevamente en unos minutos.");
     } finally {
       setLoading(false);
     }
@@ -87,82 +80,70 @@ export default function CreatePage() {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
           Crear mi SkillSynth
         </h1>
-        <p className="text-slate-300 mb-6">
-          Completá los datos y generá una tarjeta de habilidad compuesta por IA.
-        </p>
 
-        {/* Selector de plan */}
+        {/* Bloque de planes: Starter actual + Plus/Pro pagos */}
         <div className="mb-6 grid gap-4 md:grid-cols-3">
-          <button
-            type="button"
-            onClick={() => setPlan("starter")}
-            className={`rounded-2xl border p-3 text-left text-sm transition ${
-              plan === "starter"
-                ? "border-sky-500 bg-slate-900"
-                : "border-slate-800 bg-slate-950 hover:border-slate-700"
-            }`}
-          >
-            <p className="font-semibold">Starter</p>
-            <p className="text-slate-400 text-xs">
-              Hasta 5 SkillSynth al mes. Ideal para probar.
+          {/* Starter */}
+          <div className="rounded-2xl border border-sky-500 bg-slate-900/70 p-4 text-sm">
+            <p className="text-xs uppercase tracking-wide text-sky-400 mb-1">
+              Tu plan actual
             </p>
-          </button>
+            <h2 className="font-semibold text-slate-50 mb-1">Starter</h2>
+            <p className="text-slate-300 text-xs mb-3">
+              Gratis. Hasta 5 SkillSynth por mes para probar la herramienta.
+            </p>
+            <p className="text-xs text-slate-400">
+              Este es el plan que estás usando ahora para generar tus tarjetas.
+            </p>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setPlan("plus")}
-            className={`rounded-2xl border p-3 text-left text-sm transition ${
-              plan === "plus"
-                ? "border-emerald-500 bg-slate-900"
-                : "border-slate-800 bg-slate-950 hover:border-slate-700"
-            }`}
-          >
-            <p className="font-semibold">Plus</p>
-            <p className="text-slate-400 text-xs">
-              Hasta 50 SkillSynth al mes. Para creadores y freelancers.
+          {/* Plus */}
+          <div className="rounded-2xl border border-emerald-500 bg-slate-900/60 p-4 text-sm">
+            <p className="text-xs uppercase tracking-wide text-emerald-400 mb-1">
+              Plan pago
             </p>
-          </button>
+            <h2 className="font-semibold text-slate-50 mb-1">Plus</h2>
+            <p className="text-slate-300 text-xs mb-2">
+              ARS 6.900 / mes • Hasta 50 SkillSynth al mes, proyectos
+              ilimitados y sin marca de agua.
+            </p>
+            <a
+              href={MP_PLUS_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex mt-2 px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-semibold shadow-md shadow-emerald-500/30 transition"
+            >
+              Pasar al Plan Plus
+            </a>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setPlan("pro")}
-            className={`rounded-2xl border p-3 text-left text-sm transition ${
-              plan === "pro"
-                ? "border-violet-500 bg-slate-900"
-                : "border-slate-800 bg-slate-950 hover:border-slate-700"
-            }`}
-          >
-            <p className="font-semibold">Pro</p>
-            <p className="text-slate-400 text-xs">
-              Generación ilimitada. Ideal uso diario y profesional.
+          {/* Pro */}
+          <div className="rounded-2xl border border-violet-500 bg-slate-900/60 p-4 text-sm">
+            <p className="text-xs uppercase tracking-wide text-violet-400 mb-1">
+              Plan pago
             </p>
-          </button>
+            <h2 className="font-semibold text-slate-50 mb-1">Pro</h2>
+            <p className="text-slate-300 text-xs mb-2">
+              ARS 16.800 / mes • SkillSynth ilimitadas, uso comercial y
+              prioridad máxima.
+            </p>
+            <a
+              href={MP_PRO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex mt-2 px-4 py-1.5 rounded-full bg-violet-500 hover:bg-violet-400 text-slate-950 text-xs font-semibold shadow-md shadow-violet-500/30 transition"
+            >
+              Pasar al Plan Pro
+            </a>
+          </div>
         </div>
 
-        {/* Info del plan elegido */}
-        <div className="mb-6 text-xs text-slate-400">
-          {plan === "starter" && (
-            <p>
-              Estás usando el plan <span className="font-semibold">Starter</span>
-              . Tenés hasta{" "}
-              <span className="font-semibold">5 tarjetas</span> por mes.
-            </p>
-          )}
-          {plan === "plus" && (
-            <p>
-              Estás usando el plan <span className="font-semibold">Plus</span>.
-              Tenés hasta{" "}
-              <span className="font-semibold">50 tarjetas</span> por mes.
-            </p>
-          )}
-          {plan === "pro" && (
-            <p>
-              Estás usando el plan <span className="font-semibold">Pro</span>.
-              Podés generar{" "}
-              <span className="font-semibold">tarjetas ilimitadas</span>.
-            </p>
-          )}
-        </div>
+        <p className="text-slate-400 mb-6 text-sm">
+          Con el plan <span className="font-semibold">Starter</span> podés
+          generar hasta <span className="font-semibold">5 tarjetas</span> para
+          probar SkillSynth. Si te gusta el resultado, podés pasar al Plan Plus
+          o Pro cuando quieras.
+        </p>
 
         {/* Formulario */}
         <form
@@ -176,7 +157,7 @@ export default function CreatePage() {
             <textarea
               className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
               rows={3}
-              placeholder="Ej: análisis de datos, logística, diseño con Canva, trato con clientes..."
+              placeholder="Ej: análisis de datos, logística, creatividad, programación, trato con clientes..."
               value={habilidades}
               onChange={(e) => setHabilidades(e.target.value)}
             />
@@ -188,7 +169,7 @@ export default function CreatePage() {
             </label>
             <input
               className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              placeholder="Ej: generar ingresos extra online, trabajar remoto, cambiar de carrera..."
+              placeholder="Ej: generar ingresos extras, trabajar remoto, cambiar de carrera..."
               value={objetivo}
               onChange={(e) => setObjetivo(e.target.value)}
             />
@@ -237,6 +218,53 @@ export default function CreatePage() {
             </p>
           </div>
         </form>
+
+        {/* BLOQUE DE UPGRADE CUANDO LLEGA AL LÍMITE */}
+        {showUpgrade && (
+          <section className="mt-6 rounded-2xl border border-amber-500 bg-amber-950/40 p-4 md:p-6">
+            <h2 className="text-lg font-semibold text-amber-100 mb-2">
+              Llegaste al límite del plan Starter
+            </h2>
+            <p className="text-amber-100 text-sm mb-4">
+              Ya usaste tus 5 SkillSynth de prueba este mes. Si querés seguir
+              creando tarjetas de habilidades, elegí uno de estos planes:
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2 text-sm">
+              <div className="rounded-xl border border-emerald-400 bg-emerald-950/40 p-4">
+                <h3 className="font-semibold text-emerald-100 mb-1">Plus</h3>
+                <p className="text-emerald-50 text-xs mb-3">
+                  ARS 6.900 / mes • Hasta 50 SkillSynth al mes, proyectos
+                  ilimitados y sin marca de agua.
+                </p>
+                <a
+                  href={MP_PLUS_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-semibold shadow-md shadow-emerald-500/30 transition"
+                >
+                  Pasar al Plan Plus
+                </a>
+              </div>
+
+              <div className="rounded-xl border border-violet-400 bg-violet-950/40 p-4">
+                <h3 className="font-semibold text-violet-100 mb-1">Pro</h3>
+                <p className="text-violet-50 text-xs mb-3">
+                  ARS 16.800 / mes • SkillSynth ilimitadas, uso comercial y
+                  prioridad máxima.
+                </p>
+                <a
+                  href={MP_PRO_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex px-4 py-1.5 rounded-full bg-violet-500 hover:bg-violet-400 text-slate-950 text-xs font-semibold shadow-md shadow-violet-500/30 transition"
+                >
+                  Pasar al Plan Pro
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Resultado */}
         {result && (
