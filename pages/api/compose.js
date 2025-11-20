@@ -17,30 +17,55 @@ export default async function handler(req, res) {
     req.socket.remoteAddress ||
     "unknown";
 
-  // 🧩 LIMITACIÓN PLAN STARTER:
-  // Máximo 5 SkillSynth generadas en una ventana de 30 días por IP.
+  // ⏱ Ventana mensual (30 días)
   const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-  const { allowed, remaining, resetAt } = checkRateLimit({
-    ip,
-    key: "starter-monthly", // por si en el futuro querés más planes/llaves
-    maxRequests: 5,
-    windowMs: MONTH_MS,
-  });
-
-  if (!allowed) {
-    return res.status(429).json({
-      error:
-        "Has alcanzado el límite de 5 SkillSynth del plan Starter en este período. Podés pasar al plan Plus o Pro para generar más habilidades.",
-      remaining: 0,
-      resetAt,
-    });
-  }
-
-  const { habilidades, objetivo, industria, tiempo } = req.body || {};
+  // 📦 Leer campos del body (incluyendo plan)
+  const { habilidades, objetivo, industria, tiempo, plan } = req.body || {};
 
   if (!habilidades || !objetivo || !industria || !tiempo) {
     return res.status(400).json({ error: "Faltan campos obligatorios." });
+  }
+
+  // 🧾 Normalizar plan (starter | plus | pro)
+  const validPlans = ["starter", "plus", "pro"];
+  const userPlan = validPlans.includes(plan) ? plan : "starter";
+
+  // 🎯 Definir límites por plan
+  // Starter: 5 tarjetas / mes
+  // Plus: 50 tarjetas / mes
+  // Pro: ilimitado (no aplica rate limit)
+  let maxRequests = null;
+  let planLabel = "";
+
+  if (userPlan === "starter") {
+    maxRequests = 5;
+    planLabel = "Starter";
+  } else if (userPlan === "plus") {
+    maxRequests = 50;
+    planLabel = "Plus";
+  } else if (userPlan === "pro") {
+    maxRequests = null; // ilimitado (sin rate limit)
+    planLabel = "Pro";
+  }
+
+  // 🧩 Aplicar rate limit solo si el plan NO es Pro
+  if (maxRequests !== null) {
+    const { allowed, remaining, resetAt } = checkRateLimit({
+      ip,
+      key: `${userPlan}-monthly`, // ej: "starter-monthly", "plus-monthly"
+      maxRequests,
+      windowMs: MONTH_MS,
+    });
+
+    if (!allowed) {
+      return res.status(429).json({
+        error: `Has alcanzado el límite mensual de ${maxRequests} SkillSynth del plan ${planLabel}. Podés pasar a un plan superior para generar más habilidades.`,
+        remaining: 0,
+        resetAt,
+        plan: userPlan,
+      });
+    }
   }
 
   const prompt = `
@@ -108,7 +133,10 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
     // setResult(data);
     // Eso significa que VISUALMENTE el usuario Starter solo ve el último proyecto generado.
 
-    return res.status(200).json(json);
+    return res.status(200).json({
+      ...json,
+      plan: userPlan, // opcional: para que el frontend sepa con qué plan se generó
+    });
   } catch (error) {
     console.error("Error en /api/compose:", error);
     return res.status(500).json({
