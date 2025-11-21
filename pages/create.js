@@ -81,7 +81,7 @@ export default function CreatePage() {
           Crear mi SkillSynth
         </h1>
 
-        {/* Bloque de planes: Starter actual + Plus/Pro pagos */}
+        {/* Bloque de planes: Starter actual + Plus/Pro pagos con descuentos */}
         <div className="mb-6 grid gap-4 md:grid-cols-3">
           {/* Starter */}
           <div className="rounded-2xl border border-sky-500 bg-slate-900/70 p-4 text-sm">
@@ -103,10 +103,18 @@ export default function CreatePage() {
               Plan pago
             </p>
             <h2 className="font-semibold text-slate-50 mb-1">Plus</h2>
-            <p className="text-slate-300 text-xs mb-2">
-              ARS 6.900 / mes • Hasta 50 SkillSynth al mes, proyectos
+
+            <p className="text-slate-500 text-[11px] line-through mb-1">
+              Antes: ARS 17.250 / mes
+            </p>
+            <p className="text-slate-200 text-xs mb-1">
+              Ahora: <span className="font-semibold">ARS 6.900 / mes</span>
+            </p>
+            <p className="text-emerald-400 text-[11px] mb-2">
+              60% OFF por lanzamiento. Hasta 50 SkillSynth al mes, proyectos
               ilimitados y sin marca de agua.
             </p>
+
             <a
               href={MP_PLUS_URL}
               target="_blank"
@@ -123,10 +131,19 @@ export default function CreatePage() {
               Plan pago
             </p>
             <h2 className="font-semibold text-slate-50 mb-1">Pro</h2>
-            <p className="text-slate-300 text-xs mb-2">
-              ARS 16.800 / mes • SkillSynth ilimitadas, uso comercial y
+
+            <p className="text-slate-500 text-[11px] line-through mb-1">
+              Antes: ARS 28.000 / mes
+            </p>
+            <p className="text-slate-200 text-xs mb-1">
+              Ahora:{" "}
+              <span className="font-semibold">ARS 16.800 / mes</span>
+            </p>
+            <p className="text-violet-300 text-[11px] mb-2">
+              40% OFF de lanzamiento. SkillSynth ilimitadas, uso comercial y
               prioridad máxima.
             </p>
+
             <a
               href={MP_PRO_URL}
               target="_blank"
@@ -142,7 +159,7 @@ export default function CreatePage() {
           Con el plan <span className="font-semibold">Starter</span> podés
           generar hasta <span className="font-semibold">5 tarjetas</span> para
           probar SkillSynth. Si te gusta el resultado, podés pasar al Plan Plus
-          o Pro cuando quieras.
+          o Pro cuando quieras y aprovechar los descuentos de lanzamiento.
         </p>
 
         {/* FORMULARIO */}
@@ -227,15 +244,23 @@ export default function CreatePage() {
             </h2>
             <p className="text-amber-100 text-sm mb-4">
               Ya usaste tus 5 SkillSynth de prueba este mes. Si querés seguir
-              creando tarjetas de habilidades, elegí uno de estos planes:
+              creando tarjetas de habilidades, elegí uno de estos planes con
+              descuento de lanzamiento:
             </p>
 
             <div className="grid gap-4 md:grid-cols-2 text-sm">
               <div className="rounded-xl border border-emerald-400 bg-emerald-950/40 p-4">
                 <h3 className="font-semibold text-emerald-100 mb-1">Plus</h3>
-                <p className="text-emerald-50 text-xs mb-3">
-                  ARS 6.900 / mes • Hasta 50 SkillSynth al mes, proyectos
-                  ilimitados y sin marca de agua.
+                <p className="text-emerald-200 text-[11px] line-through mb-1">
+                  Antes: ARS 17.250 / mes
+                </p>
+                <p className="text-emerald-50 text-xs mb-1">
+                  Ahora:{" "}
+                  <span className="font-semibold">ARS 6.900 / mes</span>
+                </p>
+                <p className="text-emerald-200 text-[11px] mb-3">
+                  60% OFF • Hasta 50 SkillSynth al mes, proyectos ilimitados y
+                  sin marca de agua.
                 </p>
                 <a
                   href={MP_PLUS_URL}
@@ -249,9 +274,16 @@ export default function CreatePage() {
 
               <div className="rounded-xl border border-violet-400 bg-violet-950/40 p-4">
                 <h3 className="font-semibold text-violet-100 mb-1">Pro</h3>
-                <p className="text-violet-50 text-xs mb-3">
-                  ARS 16.800 / mes • SkillSynth ilimitadas, uso comercial y
-                  prioridad máxima.
+                <p className="text-violet-200 text-[11px] line-through mb-1">
+                  Antes: ARS 28.000 / mes
+                </p>
+                <p className="text-violet-50 text-xs mb-1">
+                  Ahora:{" "}
+                  <span className="font-semibold">ARS 16.800 / mes</span>
+                </p>
+                <p className="text-violet-200 text-[11px] mb-3">
+                  40% OFF • SkillSynth ilimitadas, uso comercial y prioridad
+                  máxima.
                 </p>
                 <a
                   href={MP_PRO_URL}
