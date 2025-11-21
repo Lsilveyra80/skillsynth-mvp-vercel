@@ -1,6 +1,7 @@
 // /pages/api/compose.js
 import OpenAI from "openai";
 import { checkRateLimit } from "../../lib/rateLimit";
+import { supabaseServer } from "../../lib/supabaseServer";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,28 +12,34 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  // 🔐 IDENTIFICAR IP
+  // IP para rate limit del plan Starter (invitado o sin plan definido)
   const ip =
     req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
     req.socket.remoteAddress ||
     "unknown";
 
-  // ⏱ Ventana mensual (30 días)
   const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
   // 📦 Datos que vienen del frontend
-  const { habilidades, objetivo, industria, tiempo } = req.body || {};
+  const {
+    habilidades,
+    objetivo,
+    industria,
+    tiempo,
+    userId,     // opcional (si está logueado)
+    projectId,  // opcional: proyecto activo del usuario
+  } = req.body || {};
 
   if (!habilidades || !objetivo || !industria || !tiempo) {
     return res.status(400).json({ error: "Faltan campos obligatorios." });
   }
 
-  // 🔒 Por ahora TODOS son plan Starter
+  // PLAN: por ahora usamos siempre Starter para el rate limit
   const userPlan = "starter";
   const planLabel = "Starter";
-  const maxRequests = 5; // 5 tarjetas por mes en el plan Starter
+  const maxRequests = 5; // 5 tarjetas / mes
 
-  // 🧩 Rate limit mensual por IP
+  // Rate limit mensual por IP (más adelante lo podés pasar a userId)
   const { allowed, remaining, resetAt } = checkRateLimit({
     ip,
     key: `${userPlan}-monthly`,
@@ -108,10 +115,33 @@ Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto a
       json = JSON.parse(cleaned);
     }
 
+    // 👉 Si tenemos userId y projectId, guardamos la tarjeta en la BD
+    if (userId && projectId) {
+      const requestPayload = {
+        habilidades,
+        objetivo,
+        industria,
+        tiempo,
+      };
+
+      const { error: insertError } = await supabaseServer
+        .from("skill_cards")
+        .insert({
+          project_id: projectId,
+          request_json: requestPayload,
+          response_json: json,
+        });
+
+      if (insertError) {
+        console.error("Error guardando skill_card:", insertError);
+        // No cortamos la respuesta al usuario: sólo logueamos
+      }
+    }
+
     return res.status(200).json({
       ...json,
       plan: userPlan,
-      remaining, // por si después querés mostrar "te quedan X intentos"
+      remaining,
     });
   } catch (error) {
     console.error("Error en /api/compose:", error);
