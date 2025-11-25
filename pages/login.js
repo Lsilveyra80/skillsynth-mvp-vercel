@@ -1,13 +1,13 @@
 // pages/login.js
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import { supabaseClient } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    supabaseClient.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         router.replace("/dashboard");
       }
@@ -15,7 +15,7 @@ export default function LoginPage() {
   }, [router]);
 
   async function loginWithGoogle() {
-    await supabaseClient.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
