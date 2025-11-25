@@ -1,7 +1,7 @@
 // pages/dashboard.js
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { supabaseClient } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -12,29 +12,54 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function init() {
-      const { data } = await supabaseClient.auth.getSession();
-      if (!data.session) {
-        router.replace("/login");
-        return;
-      }
-      setSession(data.session);
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      // Aseguramos que tenga proyecto activo
-      const resp = await fetch("/api/projects/ensure-default", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: data.session.user.id }),
-      });
-      const json = await resp.json();
-      setProject(json.project);
-      setLoading(false);
+        if (error) {
+          console.error("Error al obtener la sesión:", error);
+          router.replace("/login");
+          return;
+        }
+
+        if (!data.session) {
+          router.replace("/login");
+          return;
+        }
+
+        setSession(data.session);
+
+        // Aseguramos que tenga proyecto activo
+        const resp = await fetch("/api/projects/ensure-default", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: data.session.user.id }),
+        });
+
+        if (!resp.ok) {
+          throw new Error("Error al asegurar proyecto por defecto");
+        }
+
+        const json = await resp.json();
+        setProject(json.project);
+      } catch (err) {
+        console.error("Error en init del dashboard:", err);
+        router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
     }
+
     init();
   }, [router]);
 
   async function logout() {
-    await supabaseClient.auth.signOut();
-    router.replace("/login");
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Error al cerrar sesión:", err);
+    } finally {
+      router.replace("/login");
+    }
   }
 
   if (loading) {
@@ -84,4 +109,3 @@ export default function DashboardPage() {
     </main>
   );
 }
-
