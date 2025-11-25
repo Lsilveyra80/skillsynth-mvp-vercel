@@ -1,152 +1,86 @@
-// /pages/api/compose.js
-import OpenAI from "openai";
-import { checkRateLimit } from "../../lib/rateLimit";
+// pages/api/compose.js
 import { supabaseServer } from "../../lib/supabaseServer";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { supabase } from "../../lib/supabaseClient"; // opcional si necesitás cliente público
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
-  }
-
-  // IP para rate limit del plan Starter (invitado o sin plan definido)
-  const ip =
-    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-    req.socket.remoteAddress ||
-    "unknown";
-
-  const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
-
-  // 📦 Datos que vienen del frontend
-  const {
-    habilidades,
-    objetivo,
-    industria,
-    tiempo,
-    userId,     // opcional (si está logueado)
-    projectId,  // opcional: proyecto activo del usuario
-  } = req.body || {};
-
-  if (!habilidades || !objetivo || !industria || !tiempo) {
-    return res.status(400).json({ error: "Faltan campos obligatorios." });
-  }
-
-  // PLAN: por ahora usamos siempre Starter para el rate limit
-  const userPlan = "starter";
-  const planLabel = "Starter";
-  const maxRequests = 5; // 5 tarjetas / mes
-
-  // Rate limit mensual por IP (más adelante lo podés pasar a userId)
-  const { allowed, remaining, resetAt } = checkRateLimit({
-    ip,
-    key: `${userPlan}-monthly`,
-    maxRequests,
-    windowMs: MONTH_MS,
-  });
-
-  if (!allowed) {
-    return res.status(429).json({
-      error: `Alcanzaste el límite de ${maxRequests} SkillSynth del plan ${planLabel}. Para seguir generando tarjetas, podés pasar al plan Plus o Pro.`,
-      remaining: 0,
-      resetAt,
-      plan: userPlan,
-    });
-  }
-
-  const prompt = `
-Actúa como un diseñador de nuevas habilidades profesionales del futuro.
-Voy a darte información sobre una persona:
-1. Sus habilidades actuales
-2. Qué objetivo tiene
-3. Qué industria le interesa
-4. Cuánto tiempo puede estudiar por semana
-
-Con esa información, generá UNA nueva habilidad compuesta muy valiosa y única.
-
-Datos de la persona:
-- Habilidades actuales: ${habilidades}
-- Objetivo: ${objetivo}
-- Industrias de interés: ${industria}
-- Tiempo disponible por semana: ${tiempo}
-
-Devolvé EXCLUSIVAMENTE un JSON VÁLIDO con la siguiente estructura, sin texto adicional:
-
-{
- "skill_name": "",
- "description_short": "",
- "why_valuable": "",
- "niches": [""],
- "salary_range": {
-   "latam_usd": "",
-   "usa_usd": ""
- },
- "tasks": [""],
- "tools_needed": [""],
- "day_30_plan": [
-   {"week": 1, "focus": "", "tasks": ["", ""]},
-   {"week": 2, "focus": "", "tasks": ["", ""]},
-   {"week": 3, "focus": "", "tasks": ["", ""]},
-   {"week": 4, "focus": "", "tasks": ["", ""]}
- ],
- "brand_names": ["", "", ""]
-}
-`;
-
-  try {
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-    });
-
-    const raw = completion.choices?.[0]?.message?.content || "{}";
-
-    let json;
-    try {
-      json = JSON.parse(raw);
-    } catch (e) {
-      const cleaned = raw
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-      json = JSON.parse(cleaned);
     }
 
-    // 👉 Si tenemos userId y projectId, guardamos la tarjeta en la BD
-    if (userId && projectId) {
-      const requestPayload = {
-        habilidades,
-        objetivo,
-        industria,
-        tiempo,
-      };
+  try {
+    const { userId, projectId, title, goal } = req.body;
 
-      const { error: insertError } = await supabaseServer
-        .from("skill_cards")
-        .insert({
-          project_id: projectId,
-          request_json: requestPayload,
-          response_json: json,
+    if (!userId || !projectId || !title || !goal) {
+      return res.status(400).json({ error: "Faltan campos requeridos" });
+    }
+
+    // 1) Obtener plan del usuario
+    const { data: planRow, error: planErr } = await supabaseServer
+      .from("user_plans")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (planErr) {
+      return res.status(500).json({ error: "No se pudo consultar el plan del usuario" });
+    }
+
+    // 2) Lógica de límites
+    let plan = planRow?.plan || "starter"; // default si no existe
+
+    if (plan === "starter") {
+      if (planRow.limit_used >= 5) {
+        return res.status(403).json({
+          error: "Límite mensual alcanzado. Necesitás el Plan Plus o Pro.",
         });
-
-      if (insertError) {
-        console.error("Error guardando skill_card:", insertError);
-        // No cortamos la respuesta al usuario: sólo logueamos
       }
     }
 
+    // 3) Llamar a OpenAI (simulado)
+    const generatedCard = {
+      title: "Habilidad generada: " + title,
+      content: {
+        resumen: "Esta habilidad sirve para " + goal,
+        pasos: [
+          "Definir objetivo",
+          "Practicar a diario",
+          "Aplicarlo a un proyecto"
+        ]
+      }
+    };
+
+    // 4) Guardar card en Supabase
+    const { data: insertCard, error: cardErr } = await supabaseServer
+      .from("cards")
+      .insert({
+        project_id: projectId,
+        user_id: userId,
+        title: generatedCard.title,
+        content: generatedCard.content,
+      })
+      .select()
+      .single();
+
+    if (cardErr) {
+      console.error(cardErr);
+      return res.status(500).json({ error: "No se pudo guardar la tarjeta" });
+    }
+
+    // 5) Actualizar consumo del plan
+    await supabaseServer
+      .from("user_plans")
+      .update({
+        limit_used: (planRow.limit_used || 0) + 1,
+      })
+      .eq("user_id", userId);
+
     return res.status(200).json({
-      ...json,
-      plan: userPlan,
-      remaining,
+      message: "Card generada y guardada",
+      card: insertCard,
     });
-  } catch (error) {
-    console.error("Error en /api/compose:", error);
-    return res.status(500).json({
-      error: "Error al comunicarse con el modelo de IA.",
-    });
+
+  } catch (err) {
+    console.error("ERROR /compose:", err);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 }
