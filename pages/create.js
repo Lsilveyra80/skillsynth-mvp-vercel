@@ -7,8 +7,13 @@ export default function CreatePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [project, setProject] = useState(null);
-  const [title, setTitle] = useState("");
-  const [goal, setGoal] = useState("");
+
+  // Campos del formulario estilo PDF
+  const [currentSkills, setCurrentSkills] = useState("");
+  const [goals, setGoals] = useState("");
+  const [industries, setIndustries] = useState("");
+  const [timePerWeek, setTimePerWeek] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   // Cargar usuario + asegurar proyecto activo
@@ -63,8 +68,10 @@ export default function CreatePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
-          goal,
+          currentSkills,
+          goals,
+          industries,
+          timePerWeek,
           userId: user.id,
           projectId: project.id,
         }),
@@ -73,7 +80,6 @@ export default function CreatePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Mensajes más claros según el tipo de error
         let msg =
           data.error || "Error al generar las tarjetas. Intentá de nuevo.";
         if (data.detail) {
@@ -90,11 +96,11 @@ export default function CreatePage() {
         return;
       }
 
-      // ✅ Ahora, después de generar, te llevo a la página del proyecto
+      // Después de generar, vamos a la página del proyecto a ver la SkillSynth
       router.push(`/projects/${project.id}`);
     } catch (error) {
       console.error("Error en handleSubmit /create:", error);
-      alert("Hubo un problema al crear el proyecto. Intentá de nuevo.");
+      alert("Hubo un problema al crear la SkillSynth. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -110,49 +116,82 @@ export default function CreatePage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-xl">
-        <h1 className="text-2xl font-semibold text-white mb-4">
-          Crear nueva SkillSynth
+      <div className="w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-xl">
+        <h1 className="text-3xl font-semibold text-white mb-2">
+          Creá tu SkillSynth
         </h1>
-        <p className="text-sm text-slate-300 mb-6">
-          Contame el título y el objetivo; SkillSynth va a generar las tarjetas
-          de habilidades en base a eso.
+        <p className="text-sm text-slate-300 mb-8">
+          Completá algunos datos sobre vos y dejá que la IA componga una nueva
+          habilidad profesional a tu medida.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Tus habilidades actuales */}
           <div>
             <label className="block text-sm text-slate-200 mb-1">
-              Título del proyecto
+              Tus habilidades actuales
             </label>
-            <input
-              type="text"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ej: Portfolio de habilidades para Data Analyst"
+            <textarea
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500 min-h-[80px]"
+              value={currentSkills}
+              onChange={(e) => setCurrentSkills(e.target.value)}
+              placeholder="Curioso, creativo, observador, Power BI, Excel, imaginación..."
               required
             />
           </div>
 
+          {/* ¿Qué objetivos tenés? */}
           <div>
             <label className="block text-sm text-slate-200 mb-1">
-              Objetivo / contexto
+              ¿Qué objetivos tenés?
             </label>
-            <textarea
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500 min-h-[120px]"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              placeholder="Ej: quiero mostrar mis skills de análisis de datos para postularme a empleos remotos..."
+            <input
+              type="text"
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
+              value={goals}
+              onChange={(e) => setGoals(e.target.value)}
+              placeholder="Generar ingresos extras, conseguir empleo remoto, cambiar de carrera..."
               required
             />
+          </div>
+
+          {/* Fila: Industrias + Tiempo disponible */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-slate-200 mb-1">
+                Industrias de interés
+              </label>
+              <input
+                type="text"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
+                value={industries}
+                onChange={(e) => setIndustries(e.target.value)}
+                placeholder="Tecnología, educación, marketing..."
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-200 mb-1">
+                Tiempo disponible por semana
+              </label>
+              <input
+                type="text"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
+                value={timePerWeek}
+                onChange={(e) => setTimePerWeek(e.target.value)}
+                placeholder="5 horas, 10 horas..."
+                required
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full mt-4 rounded-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold py-3 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Generando tarjetas..." : "Crear proyecto y generar tarjetas"}
+            {loading ? "Generando SkillSynth..." : "Generar SkillSynth"}
           </button>
         </form>
       </div>
