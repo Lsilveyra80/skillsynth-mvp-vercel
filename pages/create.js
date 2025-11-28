@@ -81,7 +81,6 @@ export default function CreatePage() {
         }
 
         if (response.status === 403) {
-          // caso límite plan Starter
           msg =
             data.error ||
             "Límite alcanzado para el plan Starter. Pasá a Plus o Pro.";
@@ -91,9 +90,8 @@ export default function CreatePage() {
         return;
       }
 
-      // Podrías redirigir a una futura página de "proyecto"
-      // Por ahora, lo mando al dashboard
-      router.push("/dashboard");
+      // ✅ Ahora, después de generar, te llevo a la página del proyecto
+      router.push(`/projects/${project.id}`);
     } catch (error) {
       console.error("Error en handleSubmit /create:", error);
       alert("Hubo un problema al crear el proyecto. Intentá de nuevo.");
