@@ -6,32 +6,49 @@ import { supabase } from "../lib/supabaseClient";
 export default function CreatePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [project, setProject] = useState(null);
   const [title, setTitle] = useState("");
   const [goal, setGoal] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Chequear sesión apenas entra a la página
+  // Cargar usuario + asegurar proyecto activo
   useEffect(() => {
-    const loadUser = async () => {
+    const init = async () => {
       const {
         data: { user },
+        error,
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        // Si no hay usuario logueado, lo mando a /login
+      if (error || !user) {
         router.push("/login");
-      } else {
-        setUser(user);
+        return;
       }
+
+      setUser(user);
+
+      // Asegurarnos de tener projectId (por si entra directo a /create)
+      const resp = await fetch("/api/projects/ensure-default", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      if (!resp.ok) {
+        console.error("No se pudo asegurar el proyecto activo");
+        return;
+      }
+
+      const json = await resp.json();
+      setProject(json.project);
     };
 
-    loadUser();
+    init();
   }, [router]);
 
   // Manejar el submit del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !project) return;
 
     setLoading(true);
 
@@ -43,24 +60,28 @@ export default function CreatePage() {
           title,
           goal,
           userId: user.id,
-          // si tenés projectId, lo podés agregar acá
-          // projectId,
+          projectId: project.id,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Error al generar las tarjetas");
-      }
-
       const data = await response.json();
 
-      // Si tu API devuelve projectId, por ejemplo:
-      if (data.projectId) {
-        router.push(`/projects/${data.projectId}`);
-      } else {
-        // O, si todavía no tenés esa ruta, simplemente podrías ir al home
-        router.push("/");
+      if (!response.ok) {
+        // Mensajes más claros según el tipo de error
+        if (response.status === 403) {
+          alert(
+            data.error ||
+              "Límite alcanzado para el plan Starter. Pasá a Plus o Pro."
+          );
+        } else {
+          alert(data.error || "Error al generar las tarjetas");
+        }
+        return;
       }
+
+      // Podrías redirigir a una futura página de "proyecto"
+      // Por ahora, lo mando al dashboard
+      router.push("/dashboard");
     } catch (error) {
       console.error(error);
       alert("Hubo un problema al crear el proyecto. Intentá de nuevo.");
@@ -69,10 +90,10 @@ export default function CreatePage() {
     }
   };
 
-  if (!user) {
+  if (!user || !project) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Redirigiendo al login...</p>
+      <main className="min-h-screen flex items-center justify-center bg-slate-950">
+        <p className="text-slate-200 text-sm">Cargando tu espacio...</p>
       </main>
     );
   }
@@ -81,7 +102,7 @@ export default function CreatePage() {
     <main className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-xl">
         <h1 className="text-2xl font-semibold text-white mb-4">
-          Crear nuevo proyecto de habilidades
+          Crear nueva SkillSynth
         </h1>
         <p className="text-sm text-slate-300 mb-6">
           Contame el título y el objetivo; SkillSynth va a generar las tarjetas
