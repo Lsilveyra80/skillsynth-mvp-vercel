@@ -59,4 +59,44 @@ export default async function handler(req, res) {
     };
 
     // 4) Guardar card en Supabase (tabla skill_cards)
-    const { data
+    const { data: insertCard, error: cardErr } = await supabaseServer
+      .from("skill_cards")
+      .insert({
+        project_id: projectId,
+        user_id: userId,
+        title: generatedCard.title,
+        content: generatedCard.content,
+      })
+      .select()
+      .single();
+
+    if (cardErr) {
+      console.error("Error al guardar card:", cardErr);
+      return res.status(500).json({
+        error: "No se pudo guardar la tarjeta",
+        detail: cardErr.message || cardErr.details || null,
+      });
+    }
+
+    // 5) Actualizar consumo del plan (Starter)
+    if (plan === "starter") {
+      const { error: updateErr } = await supabaseServer
+        .from("user_plans")
+        .update({ limit_used: used + 1 })
+        .eq("user_id", userId);
+
+      if (updateErr) {
+        console.error("Error al actualizar limit_used:", updateErr);
+        // no rompemos la respuesta al usuario
+      }
+    }
+
+    return res.status(200).json({
+      message: "Card generada y guardada",
+      card: insertCard,
+    });
+  } catch (err) {
+    console.error("ERROR /compose:", err);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
