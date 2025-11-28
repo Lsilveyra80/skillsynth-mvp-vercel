@@ -1,10 +1,15 @@
 // pages/index.js
 import Link from "next/link";
 import PricingSection from "../components/PricingSection";
+import Header from "@/components/Header";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 px-4">
+    <main className="min-h-screen bg-slate-950 text-slate-50 px-4 relative">
+
+      {/* HEADER arriba a la derecha */}
+      <Header />
+
       {/* HERO */}
       <section className="max-w-4xl mx-auto pt-16 pb-12">
         <div className="text-center space-y-6">
@@ -17,6 +22,7 @@ export default function Home() {
             <span className="font-semibold">nueva habilidad profesional</span>{" "}
             creada por IA a partir de lo que ya sabés hacer.
           </p>
+
           <p className="text-slate-400 text-sm md:text-base">
             Combinamos tus habilidades, intereses y objetivos en una{" "}
             <span className="italic">SkillSynth Card</span> con descripción,
@@ -41,6 +47,7 @@ export default function Home() {
                 perfil único.
               </p>
             </div>
+
             <div className="rounded-2xl border border-slate-800 p-4 bg-slate-900/40">
               <p className="font-semibold mb-1">Plan en 30 días</p>
               <p className="text-slate-400">
@@ -48,6 +55,7 @@ export default function Home() {
                 sugeridas.
               </p>
             </div>
+
             <div className="rounded-2xl border border-slate-800 p-4 bg-slate-900/40">
               <p className="font-semibold mb-1">Listo para monetizar</p>
               <p className="text-slate-400">
@@ -64,3 +72,4 @@ export default function Home() {
     </main>
   );
 }
+
