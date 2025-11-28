@@ -1,21 +1,36 @@
 // pages/auth/callback.js
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import { supabaseClient } from "../../lib/supabaseClient";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
     async function handleCallback() {
-      // Supabase maneja el hash del URL automáticamente
-      const { data } = await supabaseClient.auth.getSession();
+      // Supabase procesa el hash del URL (#access_token...) automáticamente
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Error al obtener sesión en callback:", error);
+        router.replace("/login");
+        return;
+      }
+
       if (data.session) {
         router.replace("/dashboard");
       } else {
-        router.replace("/login");
+        // Si todavía no hay sesión, intento refrescar por las dudas
+        await supabase.auth.getUser();
+        const { data: dataAgain } = await supabase.auth.getSession();
+        if (dataAgain?.session) {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/login");
+        }
       }
     }
+
     handleCallback();
   }, [router]);
 
