@@ -14,32 +14,38 @@ export default function CreatePage() {
   // Cargar usuario + asegurar proyecto activo
   useEffect(() => {
     const init = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-      if (error || !user) {
+        if (error || !user) {
+          console.error("Error al obtener usuario en /create:", error);
+          router.push("/login");
+          return;
+        }
+
+        setUser(user);
+
+        // Asegurarnos de tener projectId (por si entra directo a /create)
+        const resp = await fetch("/api/projects/ensure-default", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+
+        if (!resp.ok) {
+          console.error("No se pudo asegurar el proyecto activo");
+          return;
+        }
+
+        const json = await resp.json();
+        setProject(json.project);
+      } catch (err) {
+        console.error("Error general en init de /create:", err);
         router.push("/login");
-        return;
       }
-
-      setUser(user);
-
-      // Asegurarnos de tener projectId (por si entra directo a /create)
-      const resp = await fetch("/api/projects/ensure-default", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-
-      if (!resp.ok) {
-        console.error("No se pudo asegurar el proyecto activo");
-        return;
-      }
-
-      const json = await resp.json();
-      setProject(json.project);
     };
 
     init();
@@ -68,14 +74,20 @@ export default function CreatePage() {
 
       if (!response.ok) {
         // Mensajes más claros según el tipo de error
-        if (response.status === 403) {
-          alert(
-            data.error ||
-              "Límite alcanzado para el plan Starter. Pasá a Plus o Pro."
-          );
-        } else {
-          alert(data.error || "Error al generar las tarjetas");
+        let msg =
+          data.error || "Error al generar las tarjetas. Intentá de nuevo.";
+        if (data.detail) {
+          msg += `\n\nDetalle: ${data.detail}`;
         }
+
+        if (response.status === 403) {
+          // caso límite plan Starter
+          msg =
+            data.error ||
+            "Límite alcanzado para el plan Starter. Pasá a Plus o Pro.";
+        }
+
+        alert(msg);
         return;
       }
 
@@ -83,7 +95,7 @@ export default function CreatePage() {
       // Por ahora, lo mando al dashboard
       router.push("/dashboard");
     } catch (error) {
-      console.error(error);
+      console.error("Error en handleSubmit /create:", error);
       alert("Hubo un problema al crear el proyecto. Intentá de nuevo.");
     } finally {
       setLoading(false);
