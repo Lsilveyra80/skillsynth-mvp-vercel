@@ -39,9 +39,7 @@ export default function ProjectPage() {
         }
 
         // 3) Traer tarjetas del proyecto a través del API
-        const resp = await fetch(
-          `/api/projects/cards?projectId=${projectId}`
-        );
+        const resp = await fetch(`/api/projects/cards?projectId=${projectId}`);
         const json = await resp.json();
         if (!resp.ok) {
           console.error("Error cargando tarjetas:", json);
@@ -72,14 +70,15 @@ export default function ProjectPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <header className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold mb-1">
+            <h1 className="text-3xl font-semibold mb-1">
               SkillSynth de "{projectName}"
             </h1>
             <p className="text-sm text-slate-400">
-              Usuario: {session.user.user_metadata?.username || session.user.email}
+              Usuario:{" "}
+              {session.user.user_metadata?.username || session.user.email}
             </p>
           </div>
           <button
@@ -95,42 +94,191 @@ export default function ProjectPage() {
             Todavía no generaste ninguna SkillSynth para este proyecto.
           </p>
         ) : (
-          <div className="space-y-4">
-            {cards.map((card) => (
-              <article
-                key={card.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"
-              >
-                <h2 className="text-lg font-semibold text-slate-50 mb-2">
-                  {card.title}
-                </h2>
+          <div className="space-y-6">
+            {cards.map((card) => {
+              const c = card.content || {};
+              const plan = c.plan30dias || {};
 
-                {card.content?.resumen && (
-                  <p className="text-sm text-slate-200 mb-3">
-                    {card.content.resumen}
-                  </p>
-                )}
+              return (
+                <article
+                  key={card.id}
+                  className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 md:p-8"
+                >
+                  {/* Título + resumen */}
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                    <div className="md:flex-1">
+                      <h2 className="text-xl md:text-2xl font-semibold text-slate-50 mb-2">
+                        {card.title}
+                      </h2>
+                      {c.resumen && (
+                        <p className="text-sm text-slate-200">{c.resumen}</p>
+                      )}
+                    </div>
 
-                {Array.isArray(card.content?.pasos) && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 mb-1">
-                      Pasos sugeridos:
-                    </p>
-                    <ul className="list-disc list-inside text-sm text-slate-200 space-y-1">
-                      {card.content.pasos.map((paso, idx) => (
-                        <li key={idx}>{paso}</li>
-                      ))}
-                    </ul>
+                    {/* Nombres de marca + ingresos (columna derecha como en el PDF) */}
+                    {(Array.isArray(c.nombresMarca) || c.ingresos) && (
+                      <div className="md:w-72 bg-slate-900/90 border border-slate-800 rounded-2xl p-3 text-xs text-slate-200">
+                        {Array.isArray(c.nombresMarca) && (
+                          <div className="mb-3">
+                            <p className="font-semibold text-slate-100 mb-1">
+                              Nombres de marca sugeridos
+                            </p>
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {c.nombresMarca.map((n, idx) => (
+                                <li key={idx}>{n}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {c.ingresos && (
+                          <div>
+                            <p className="font-semibold text-slate-100 mb-1">
+                              Rango de ingresos
+                            </p>
+                            {c.ingresos.latam && (
+                              <p>LATAM: {c.ingresos.latam}</p>
+                            )}
+                            {c.ingresos.global && (
+                              <p>Global: {c.ingresos.global}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
 
-                <p className="text-[11px] text-slate-500 mt-3">
-                  Generada el{" "}
-                  {card.created_at &&
-                    new Date(card.created_at).toLocaleString("es-AR")}
-                </p>
-              </article>
-            ))}
+                  {/* ¿Por qué es valioso? + Nichos */}
+                  {(c.porque_valioso || Array.isArray(c.nichos)) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      {c.porque_valioso && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-slate-100 mb-1">
+                            ¿Por qué es valioso?
+                          </h3>
+                          <p className="text-sm text-slate-200">
+                            {c.porque_valioso}
+                          </p>
+                        </div>
+                      )}
+
+                      {Array.isArray(c.nichos) && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-slate-100 mb-1">
+                            Nichos donde encaja
+                          </h3>
+                          <ul className="list-disc list-inside text-sm text-slate-200 space-y-1">
+                            {c.nichos.map((n, idx) => (
+                              <li key={idx}>{n}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tareas sugeridas */}
+                  {Array.isArray(c.tareas) && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-slate-100 mb-1">
+                        Tareas que podrías hacer
+                      </h3>
+                      <ul className="list-disc list-inside text-sm text-slate-200 space-y-1">
+                        {c.tareas.map((t, idx) => (
+                          <li key={idx}>{t}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Herramientas sugeridas */}
+                  {Array.isArray(c.herramientas) && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-slate-100 mb-1">
+                        Herramientas sugeridas
+                      </h3>
+                      <ul className="list-disc list-inside text-sm text-slate-200 space-y-1">
+                        {c.herramientas.map((h, idx) => (
+                          <li key={idx}>{h}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Plan de 30 días */}
+                  {plan &&
+                    (plan.semana1 || plan.semana2 || plan.semana3 || plan.semana4) && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold text-slate-100 mb-3">
+                          Plan de 30 días
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs text-slate-200">
+                          {plan.semana1 && (
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                              <p className="font-semibold mb-1">Semana 1</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {plan.semana1.map((p, idx) => (
+                                  <li key={idx}>{p}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {plan.semana2 && (
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                              <p className="font-semibold mb-1">Semana 2</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {plan.semana2.map((p, idx) => (
+                                  <li key={idx}>{p}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {plan.semana3 && (
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                              <p className="font-semibold mb-1">Semana 3</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {plan.semana3.map((p, idx) => (
+                                  <li key={idx}>{p}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {plan.semana4 && (
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                              <p className="font-semibold mb-1">Semana 4</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {plan.semana4.map((p, idx) => (
+                                  <li key={idx}>{p}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Fallback antiguo: si solo existe content.pasos, lo mostramos también */}
+                  {Array.isArray(c.pasos) && !c.plan30dias && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-semibold text-slate-100 mb-1">
+                        Pasos sugeridos
+                      </h3>
+                      <ul className="list-disc list-inside text-sm text-slate-200 space-y-1">
+                        {c.pasos.map((p, idx) => (
+                          <li key={idx}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-slate-500 mt-4">
+                    Generada el{" "}
+                    {card.created_at &&
+                      new Date(card.created_at).toLocaleString("es-AR")}
+                  </p>
+                </article>
+              );
+            })}
           </div>
         )}
       </div>
