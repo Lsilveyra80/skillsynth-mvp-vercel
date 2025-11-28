@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function LoginPage() {
   const router = useRouter();
 
+  // Si ya hay sesión, salto directo al dashboard
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
