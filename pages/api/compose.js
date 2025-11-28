@@ -7,9 +7,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, projectId, title, goal } = req.body;
+    const {
+      userId,
+      projectId,
+      currentSkills,
+      goals,
+      industries,
+      timePerWeek,
+    } = req.body;
 
-    if (!userId || !projectId || !title || !goal) {
+    if (
+      !userId ||
+      !projectId ||
+      !currentSkills ||
+      !goals ||
+      !industries ||
+      !timePerWeek
+    ) {
       return res.status(400).json({ error: "Faltan campos requeridos" });
     }
 
@@ -45,16 +59,88 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3) "Llamada" a IA simulada
+    // 3) "Llamada" a IA simulada – estructura similar al PDF
+    const title =
+      "Perfil profesional para " +
+      (industries || "tu industria principal") +
+      " orientado a " +
+      goals.toLowerCase();
+
     const generatedCard = {
-      title: "Habilidad generada: " + title,
+      title,
       content: {
-        resumen: "Esta habilidad sirve para " + goal,
-        pasos: [
-          "Definir objetivo",
-          "Practicar a diario",
-          "Aplicarlo a un proyecto",
+        resumen:
+          "Combina tus habilidades en " +
+          currentSkills +
+          " con tu interés en " +
+          industries +
+          " para " +
+          goals.toLowerCase() +
+          ".",
+
+        porque_valioso:
+          "Permite crear valor real en " +
+          industries +
+          " aprovechando tus habilidades actuales y un plan de acción de " +
+          timePerWeek +
+          " por semana.",
+
+        nichos: [
+          industries,
+          "servicios personalizados",
+          "contenidos digitales",
+          "proyectos impulsados por datos",
         ],
+
+        tareas: [
+          "Analizar necesidades y oportunidades dentro de " + industries,
+          "Diseñar propuestas o servicios basados en tus skills actuales",
+          "Crear contenido, productos o soluciones que ayuden a otras personas",
+          "Medir resultados y ajustar tu oferta según el feedback",
+        ],
+
+        herramientas: [
+          "Herramientas que ya usás: " + currentSkills,
+          "Plataformas de contenido (YouTube, blogs, redes sociales)",
+          "Herramientas de diseño (Canva, Figma)",
+          "Plataformas de cursos o productos digitales",
+        ],
+
+        nombresMarca: [
+          "SkillSynth " + industries.split(",")[0]?.trim(),
+          "Insightful " + industries.split(",")[0]?.trim(),
+          "Boosted " + goals.split(" ")[0]?.trim(),
+        ],
+
+        ingresos: {
+          latam: "300–700 USD / mes (estimado inicial)",
+          global: "1.500–3.500 USD / mes (si escalás a clientes globales)",
+        },
+
+        plan30dias: {
+          semana1: [
+            "Definir objetivo concreto para los próximos 30 días",
+            "Mapear tus habilidades actuales y cómo se conectan con " + industries,
+            "Investigar referentes o casos de éxito en tu nicho",
+          ],
+          semana2: [
+            "Diseñar una primera oferta mínima (servicio, contenido, producto simple)",
+            "Crear 1–2 piezas de contenido que muestren tu propuesta",
+            "Hablar con 3–5 personas para validar interés y recibir feedback",
+          ],
+          semana3: [
+            "Mejorar tu oferta según el feedback recibido",
+            "Publicar y promocionar tu propuesta en los canales que uses",
+            "Medir interés: clics, mensajes, respuestas, seguidores nuevos",
+          ],
+          semana4: [
+            "Definir qué funcionó mejor y qué vas a repetir",
+            "Agregar una mejora concreta a tu oferta (bonus, mejor presentación, etc.)",
+            "Planear los próximos 60 días de acción manteniendo el ritmo de " +
+              timePerWeek +
+              " semanales",
+          ],
+        },
       },
     };
 
@@ -87,7 +173,6 @@ export default async function handler(req, res) {
 
       if (updateErr) {
         console.error("Error al actualizar limit_used:", updateErr);
-        // no rompemos la respuesta al usuario
       }
     }
 
