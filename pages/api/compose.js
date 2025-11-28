@@ -13,31 +13,39 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltan campos requeridos" });
     }
 
-    // 1) Obtener plan del usuario
+    // 1) Asegurar que el usuario tenga fila en user_plans
+    //    Si no existe, crea Starter con 0 usos; si existe, la devuelve.
     const { data: planRow, error: planErr } = await supabaseServer
       .from("user_plans")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+      .upsert(
+        {
+          user_id: userId,
+          plan: "starter",   // por defecto todos entran como Starter
+          limit_used: 0,
+        },
+        { onConflict: "user_id" }
+      )
+      .select()
+      .single();
 
     if (planErr) {
-      console.error(planErr);
+      console.error("Error en user_plans:", planErr);
       return res
         .status(500)
         .json({ error: "No se pudo consultar el plan del usuario" });
     }
 
-    // 2) Lógica de límites
-    const plan = planRow?.plan || "starter"; // default Starter
-    const used = planRow?.limit_used || 0;
+    const plan = planRow.plan || "starter";
+    const used = planRow.limit_used ?? 0;
 
+    // 2) Lógica de límites
     if (plan === "starter" && used >= 5) {
       return res.status(403).json({
         error: "Límite mensual alcanzado. Necesitás el Plan Plus o Pro.",
       });
     }
 
-    // 3) Llamar a OpenAI (acá está SIMULADO)
+    // 3) Llamada a IA (SIMULADA por ahora)
     const generatedCard = {
       title: "Habilidad generada: " + title,
       content: {
@@ -63,22 +71,21 @@ export default async function handler(req, res) {
       .single();
 
     if (cardErr) {
-      console.error(cardErr);
+      console.error("Error al guardar card:", cardErr);
       return res.status(500).json({ error: "No se pudo guardar la tarjeta" });
     }
 
-    // 5) Actualizar consumo del plan
+    // 5) Actualizar consumo del plan (Starter)
     if (plan === "starter") {
-      await supabaseServer
+      const { error: updateErr } = await supabaseServer
         .from("user_plans")
-        .upsert(
-          {
-            user_id: userId,
-            plan,
-            limit_used: used + 1,
-          },
-          { onConflict: "user_id" }
-        );
+        .update({ limit_used: used + 1 })
+        .eq("user_id", userId);
+
+      if (updateErr) {
+        console.error("Error al actualizar limit_used:", updateErr);
+        // No rompo la respuesta al usuario, solo lo logueo.
+      }
     }
 
     return res.status(200).json({
