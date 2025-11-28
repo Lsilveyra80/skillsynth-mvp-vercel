@@ -1,7 +1,7 @@
 // pages/dashboard.js
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { supabase } from "../lib/supabaseClient";
+import { supabaseClient } from "../lib/supabaseClient";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -12,55 +12,31 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function init() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
+      const { data } = await supabaseClient.auth.getSession();
 
-        if (error) {
-          console.error("Error al obtener la sesión:", error);
-          router.replace("/login");
-          return;
-        }
-
-        if (!data.session) {
-          router.replace("/login");
-          return;
-        }
-
-        setSession(data.session);
-
-        // Aseguramos que tenga proyecto activo
-        const resp = await fetch("/api/projects/ensure-default", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: data.session.user.id }),
-        });
-
-        if (!resp.ok) {
-          throw new Error("Error al asegurar proyecto por defecto");
-        }
-
-        const json = await resp.json();
-        setProject(json.project);
-      } catch (err) {
-        console.error("Error en init del dashboard:", err);
+      if (!data.session) {
         router.replace("/login");
-      } finally {
-        setLoading(false);
+        return;
       }
-    }
+      setSession(data.session);
 
+      // Aseguramos que tenga proyecto activo
+      const resp = await fetch("/api/projects/ensure-default", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: data.session.user.id }),
+      });
+
+      const json = await resp.json();
+      setProject(json.project);
+      setLoading(false);
+    }
     init();
   }, [router]);
 
   async function logout() {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error("Error al cerrar sesión:", err);
-    } finally {
-      // 👉 ahora te lleva a la página principal
-      router.replace("/");
-    }
+    await supabaseClient.auth.signOut();
+    router.replace("/login");
   }
 
   if (loading) {
@@ -69,10 +45,6 @@ export default function DashboardPage() {
         <p className="text-slate-300 text-sm">Cargando tu espacio...</p>
       </main>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (
@@ -88,9 +60,6 @@ export default function DashboardPage() {
       </header>
 
       <section className="max-w-4xl mx-auto pt-6 pb-16">
-        <p className="text-slate-300 text-sm mb-1">
-          Sesión iniciada como {session.user.email}
-        </p>
         <p className="text-slate-300 text-sm mb-4">
           Hola {session.user.email}. Este es tu proyecto activo:
         </p>
