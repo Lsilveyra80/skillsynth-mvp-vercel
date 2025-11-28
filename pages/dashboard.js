@@ -58,8 +58,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Error al cerrar sesión:", err);
     } finally {
-      // 👉 ahora te lleva a la página principal
-      router.replace("/");
+      router.replace("/login");
     }
   }
 
@@ -71,14 +70,20 @@ export default function DashboardPage() {
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  const displayName =
+    session.user.user_metadata?.username || session.user.email;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 px-4">
       <header className="max-w-4xl mx-auto pt-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">SkillSynth Dashboard</h1>
+        <div>
+          <h1 className="text-lg font-semibold">SkillSynth Dashboard</h1>
+          <p className="text-xs text-slate-400">
+            Sesión iniciada como{" "}
+            <span className="font-medium text-slate-200">{displayName}</span>
+          </p>
+        </div>
+
         <button
           onClick={logout}
           className="text-xs text-slate-400 hover:text-slate-200"
@@ -89,10 +94,13 @@ export default function DashboardPage() {
 
       <section className="max-w-4xl mx-auto pt-6 pb-16">
         <p className="text-slate-300 text-sm mb-1">
-          Sesión iniciada como {session.user.email}
+          Hola {displayName}. Este es tu proyecto activo:
         </p>
-        <p className="text-slate-300 text-sm mb-4">
-          Hola {session.user.email}. Este es tu proyecto activo:
+
+        <p className="text-xs text-slate-400 mb-4">
+          <Link href="/profile" className="underline hover:text-slate-200">
+            Editar nombre de usuario
+          </Link>
         </p>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 mb-6">
@@ -117,3 +125,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+
