@@ -1,6 +1,6 @@
 // components/Header.js
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabaseClient";
+import { supabase } from "../lib/supabaseClient.js";
 
 export default function Header() {
   const [user, setUser] = useState(null);
