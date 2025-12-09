@@ -24,8 +24,8 @@ const plans = [
   {
     id: "plus",
     name: "Plus",
-    price: "$10.752 / mes",
-    priceDetail: "Antes $26.880 (−60%)",
+    price: "$6.900 / mes",
+    priceDetail: "Antes $11.040 (−60%)",
     badge: "Recomendado",
     description:
       "Para quienes quieren tomar acción en serio: más tarjetas, más proyectos y soporte prioritario.",
@@ -44,8 +44,8 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "$5.796 / mes",
-    priceDetail: "Antes $9.660 (−40%)",
+    price: "$16.800 / mes",
+    priceDetail: "Antes $23.520 (−40%)",
     badge: "Para creadores intensivos",
     description:
       "Si generás muchas ideas, contenidos o servicios y querés explotar SkillSynth al máximo.",
