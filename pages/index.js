@@ -1,15 +1,10 @@
 // pages/index.js
 import Link from "next/link";
 import PricingSection from "../components/PricingSection";
-import Header from "@/components/Header";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 px-4 relative">
-
-      {/* HEADER arriba a la derecha */}
-      <Header />
-
+    <main className="min-h-screen bg-slate-950 text-slate-50 px-4">
       {/* HERO */}
       <section className="max-w-4xl mx-auto pt-16 pb-12">
         <div className="text-center space-y-6">
@@ -26,48 +21,22 @@ export default function Home() {
           <p className="text-slate-400 text-sm md:text-base">
             Combinamos tus habilidades, intereses y objetivos en una{" "}
             <span className="italic">SkillSynth Card</span> con descripción,
-            nichos, potencial de ingresos y plan de 30 días.
+            nichos, potencial de ingresos y un plan de acción para los primeros
+            30 días.
           </p>
 
           <div className="pt-4">
             <Link
-              href="/create"
-              className="inline-flex items-center px-6 py-3 rounded-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold shadow-lg shadow-sky-500/30 transition"
+              href="#planes"
+              className="inline-flex items-center px-6 py-3 rounded-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold shadow-lg shadow-sky-500/30 transition text-sm md:text-base"
             >
-              Crear mi SkillSynth
+              Ver planes y crear mi cuenta
             </Link>
-          </div>
-
-          {/* Features debajo del hero */}
-          <div className="mt-10 grid gap-4 md:grid-cols-3 text-left text-sm text-slate-300">
-            <div className="rounded-2xl border border-slate-800 p-4 bg-slate-900/40">
-              <p className="font-semibold mb-1">Hibridación de habilidades</p>
-              <p className="text-slate-400">
-                Mezclá lo que ya sabés con lo que querés lograr y obtené un
-                perfil único.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 p-4 bg-slate-900/40">
-              <p className="font-semibold mb-1">Plan en 30 días</p>
-              <p className="text-slate-400">
-                Recibí un roadmap en semanas con foco, tareas y herramientas
-                sugeridas.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 p-4 bg-slate-900/40">
-              <p className="font-semibold mb-1">Listo para monetizar</p>
-              <p className="text-slate-400">
-                Nichos, rangos de ingresos posibles y tipos de proyectos que
-                podrías vender.
-              </p>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* SECCIÓN DE PRECIOS */}
+      {/* PLANES */}
       <PricingSection />
     </main>
   );
