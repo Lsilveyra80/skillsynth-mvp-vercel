@@ -27,7 +27,7 @@ export default function CreatePage() {
 
         if (error || !user) {
           console.error("Error al obtener usuario en /create:", error);
-          router.push("/login");
+          router.push("/auth");
           return;
         }
 
@@ -49,7 +49,7 @@ export default function CreatePage() {
         setProject(json.project);
       } catch (err) {
         console.error("Error general en init de /create:", err);
-        router.push("/login");
+        router.push("/auth");
       }
     };
 
@@ -150,7 +150,7 @@ export default function CreatePage() {
               className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
-              placeholder="Generar ingresos extras, conseguir empleo remoto, cambiar de carrera..."
+              placeholder="Generar ingresos extras, conseguir empleo remoto, cambiar de carrera."
               required
             />
           </div>
@@ -166,7 +166,7 @@ export default function CreatePage() {
                 className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
                 value={industries}
                 onChange={(e) => setIndustries(e.target.value)}
-                placeholder="Tecnología, educación, marketing..."
+                placeholder="Tecnología, educación, marketing."
                 required
               />
             </div>
@@ -180,7 +180,7 @@ export default function CreatePage() {
                 className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
                 value={timePerWeek}
                 onChange={(e) => setTimePerWeek(e.target.value)}
-                placeholder="5 horas, 10 horas..."
+                placeholder="5 horas, 10 horas."
                 required
               />
             </div>
