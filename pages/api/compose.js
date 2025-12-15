@@ -1,187 +1,117 @@
 // pages/api/compose.js
-import { supabaseServer } from "../../lib/supabaseServer";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  try {
-    const {
-      userId,
-      projectId,
-      currentSkills,
-      goals,
-      industries,
-      timePerWeek,
-    } = req.body;
+  // Soportar ambos formatos:
+  // - el viejo: habilidades/objetivo/industria/tiempo :contentReference[oaicite:2]{index=2}
+  // - el nuevo del formulario PDF: currentSkills/goals/industries/timePerWeek :contentReference[oaicite:3]{index=3}
+  const body = req.body || {};
+  const habilidades = body.habilidades ?? body.currentSkills;
+  const objetivo = body.objetivo ?? body.goals;
+  const industria = body.industria ?? body.industries;
+  const tiempo = body.tiempo ?? body.timePerWeek;
 
-    if (
-      !userId ||
-      !projectId ||
-      !currentSkills ||
-      !goals ||
-      !industries ||
-      !timePerWeek
-    ) {
-      return res.status(400).json({ error: "Faltan campos requeridos" });
-    }
-
-    // 1) Asegurar fila en user_plans (todos entran como Starter por defecto)
-    const { data: planRow, error: planErr } = await supabaseServer
-      .from("user_plans")
-      .upsert(
-        {
-          user_id: userId,
-          plan: "starter",
-          limit_used: 0,
-        },
-        { onConflict: "user_id" }
-      )
-      .select()
-      .single();
-
-    if (planErr) {
-      console.error("Error en user_plans:", planErr);
-      return res.status(500).json({
-        error: "No se pudo consultar el plan del usuario",
-        detail: planErr.message || planErr.details || null,
-      });
-    }
-
-    const plan = planRow.plan || "starter";
-    const used = planRow.limit_used ?? 0;
-
-    // 2) Límite del plan Starter
-    if (plan === "starter" && used >= 5) {
-      return res.status(403).json({
-        error: "Límite mensual alcanzado. Necesitás el Plan Plus o Pro.",
-      });
-    }
-
-    // 3) "Llamada" a IA simulada – estructura similar al PDF
-    const title =
-      "Perfil profesional para " +
-      (industries || "tu industria principal") +
-      " orientado a " +
-      goals.toLowerCase();
-
-    const generatedCard = {
-      title,
-      content: {
-        resumen:
-          "Combina tus habilidades en " +
-          currentSkills +
-          " con tu interés en " +
-          industries +
-          " para " +
-          goals.toLowerCase() +
-          ".",
-
-        porque_valioso:
-          "Permite crear valor real en " +
-          industries +
-          " aprovechando tus habilidades actuales y un plan de acción de " +
-          timePerWeek +
-          " por semana.",
-
-        nichos: [
-          industries,
-          "servicios personalizados",
-          "contenidos digitales",
-          "proyectos impulsados por datos",
-        ],
-
-        tareas: [
-          "Analizar necesidades y oportunidades dentro de " + industries,
-          "Diseñar propuestas o servicios basados en tus skills actuales",
-          "Crear contenido, productos o soluciones que ayuden a otras personas",
-          "Medir resultados y ajustar tu oferta según el feedback",
-        ],
-
-        herramientas: [
-          "Herramientas que ya usás: " + currentSkills,
-          "Plataformas de contenido (YouTube, blogs, redes sociales)",
-          "Herramientas de diseño (Canva, Figma)",
-          "Plataformas de cursos o productos digitales",
-        ],
-
-        nombresMarca: [
-          "SkillSynth " + industries.split(",")[0]?.trim(),
-          "Insightful " + industries.split(",")[0]?.trim(),
-          "Boosted " + goals.split(" ")[0]?.trim(),
-        ],
-
-        ingresos: {
-          latam: "300–700 USD / mes (estimado inicial)",
-          global: "1.500–3.500 USD / mes (si escalás a clientes globales)",
-        },
-
-        plan30dias: {
-          semana1: [
-            "Definir objetivo concreto para los próximos 30 días",
-            "Mapear tus habilidades actuales y cómo se conectan con " + industries,
-            "Investigar referentes o casos de éxito en tu nicho",
-          ],
-          semana2: [
-            "Diseñar una primera oferta mínima (servicio, contenido, producto simple)",
-            "Crear 1–2 piezas de contenido que muestren tu propuesta",
-            "Hablar con 3–5 personas para validar interés y recibir feedback",
-          ],
-          semana3: [
-            "Mejorar tu oferta según el feedback recibido",
-            "Publicar y promocionar tu propuesta en los canales que uses",
-            "Medir interés: clics, mensajes, respuestas, seguidores nuevos",
-          ],
-          semana4: [
-            "Definir qué funcionó mejor y qué vas a repetir",
-            "Agregar una mejora concreta a tu oferta (bonus, mejor presentación, etc.)",
-            "Planear los próximos 60 días de acción manteniendo el ritmo de " +
-              timePerWeek +
-              " semanales",
-          ],
-        },
-      },
-    };
-
-    // 4) Guardar card en Supabase (tabla skill_cards)
-    const { data: insertCard, error: cardErr } = await supabaseServer
-      .from("skill_cards")
-      .insert({
-        project_id: projectId,
-        user_id: userId,
-        title: generatedCard.title,
-        content: generatedCard.content,
-      })
-      .select()
-      .single();
-
-    if (cardErr) {
-      console.error("Error al guardar card:", cardErr);
-      return res.status(500).json({
-        error: "No se pudo guardar la tarjeta",
-        detail: cardErr.message || cardErr.details || null,
-      });
-    }
-
-    // 5) Actualizar consumo del plan (Starter)
-    if (plan === "starter") {
-      const { error: updateErr } = await supabaseServer
-        .from("user_plans")
-        .update({ limit_used: used + 1 })
-        .eq("user_id", userId);
-
-      if (updateErr) {
-        console.error("Error al actualizar limit_used:", updateErr);
-      }
-    }
-
-    return res.status(200).json({
-      message: "Card generada y guardada",
-      card: insertCard,
+  if (!habilidades || !objetivo || !industria || !tiempo) {
+    return res.status(400).json({
+      error: "Faltan campos obligatorios.",
+      detail:
+        "Se requieren: habilidades/currentSkills, objetivo/goals, industria/industries, tiempo/timePerWeek.",
     });
-  } catch (err) {
-    console.error("ERROR /compose:", err);
-    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+
+  // Prompt mejorado (más específico + realista + con formato JSON fijo)
+  const system = `
+Sos un asesor experto en carreras digitales, diseño de habilidades y monetización.
+Tu tarea es crear una “SkillSynth Card”: una nueva habilidad/rol profesional combinando las capacidades del usuario con su objetivo, industrias y tiempo disponible.
+Reglas:
+- Sé específico y práctico. Evitá frases genéricas.
+- No inventes credenciales del usuario (títulos, experiencia, empresas).
+- Si faltan datos, asumí lo mínimo y mantené el plan realista.
+- Ajustá la carga al tiempo semanal disponible.
+- Respetá el esquema JSON EXACTO solicitado.
+`.trim();
+
+  const user = `
+Datos del usuario:
+- Habilidades actuales: ${habilidades}
+- Objetivo: ${objetivo}
+- Industrias de interés: ${industria}
+- Tiempo disponible por semana: ${tiempo}
+
+Generá UNA SkillSynth Card y devolvé EXCLUSIVAMENTE un JSON VÁLIDO con esta estructura (sin texto extra, sin markdown):
+
+{
+  "skill_name": "",
+  "description_short": "",
+  "why_valuable": "",
+  "niches": [""],
+  "salary_range": {
+    "latam_usd": "",
+    "usa_usd": ""
+  },
+  "tasks": [""],
+  "tools_needed": [""],
+  "day_30_plan": [
+    { "week": 1, "focus": "", "tasks": ["", "", ""] },
+    { "week": 2, "focus": "", "tasks": ["", "", ""] },
+    { "week": 3, "focus": "", "tasks": ["", "", ""] },
+    { "week": 4, "focus": "", "tasks": ["", "", ""] }
+  ],
+  "brand_names": ["", "", ""]
+}
+
+Criterios:
+- skill_name: 4 a 7 palabras, claro y vendible.
+- description_short: 3–5 líneas.
+- why_valuable: 3–5 bullets en texto (separados por saltos de línea).
+- niches: 5 nichos concretos.
+- salary_range: rangos mensuales en USD (latam y global) razonables.
+- tasks: 6–10 tareas que esa habilidad permite ofrecer.
+- tools_needed: 6–10 herramientas/plataformas sugeridas.
+- day_30_plan: 3 tareas por semana, adaptadas al tiempo disponible.
+- brand_names: 3 nombres de marca/proyecto cortos.
+`.trim();
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.6,
+      // Para forzar JSON: si tu modelo lo soporta, esto reduce muchísimo los "```json"
+      response_format: { type: "json_object" },
+    });
+
+    const raw = completion.choices?.[0]?.message?.content || "{}";
+
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      // fallback por si igual viniera con texto
+      const cleaned = raw
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+      json = JSON.parse(cleaned);
+    }
+
+    return res.status(200).json(json);
+  } catch (error) {
+    console.error("Error en /api/compose:", error);
+    return res.status(500).json({
+      error: "Error al comunicarse con el modelo de IA.",
+      detail: error?.message || "Sin detalle",
+    });
   }
 }
