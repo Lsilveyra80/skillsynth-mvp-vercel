@@ -1,7 +1,7 @@
 // pages/api/compose.js
 import OpenAI from "openai";
 
-const client = new OpenAI({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
@@ -10,10 +10,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  // Soportar ambos formatos:
-  // - el viejo: habilidades/objetivo/industria/tiempo :contentReference[oaicite:2]{index=2}
-  // - el nuevo del formulario PDF: currentSkills/goals/industries/timePerWeek :contentReference[oaicite:3]{index=3}
   const body = req.body || {};
+
+  // Soportamos ambos nombres por compatibilidad
   const habilidades = body.habilidades ?? body.currentSkills;
   const objetivo = body.objetivo ?? body.goals;
   const industria = body.industria ?? body.industries;
@@ -21,74 +20,120 @@ export default async function handler(req, res) {
 
   if (!habilidades || !objetivo || !industria || !tiempo) {
     return res.status(400).json({
-      error: "Faltan campos obligatorios.",
+      error: "Faltan campos obligatorios",
       detail:
-        "Se requieren: habilidades/currentSkills, objetivo/goals, industria/industries, tiempo/timePerWeek.",
+        "Se requieren: habilidades/currentSkills, objetivo/goals, industria/industries, tiempo/timePerWeek",
     });
   }
 
-  // Prompt mejorado (más específico + realista + con formato JSON fijo)
-  const system = `
-Sos un asesor experto en carreras digitales, diseño de habilidades y monetización.
-Tu tarea es crear una “SkillSynth Card”: una nueva habilidad/rol profesional combinando las capacidades del usuario con su objetivo, industrias y tiempo disponible.
-Reglas:
-- Sé específico y práctico. Evitá frases genéricas.
-- No inventes credenciales del usuario (títulos, experiencia, empresas).
-- Si faltan datos, asumí lo mínimo y mantené el plan realista.
-- Ajustá la carga al tiempo semanal disponible.
-- Respetá el esquema JSON EXACTO solicitado.
+  /* =========================
+     PROMPT NIVEL PRODUCTO
+     ========================= */
+
+  const systemPrompt = `
+Sos un estratega senior de carrera y producto digital (AI Career & Product Strategist).
+Tu trabajo es convertir información del usuario en una SkillSynth Card de nivel profesional,
+lista para vender como servicio o posicionar como perfil laboral.
+
+Reglas estrictas:
+- Nada genérico ni frases vacías (“alta demanda”, “gran oportunidad”) sin explicación concreta.
+- No inventes títulos, estudios ni experiencia previa del usuario.
+- Todo debe ser accionable, específico y orientado a resultados.
+- Ajustá complejidad y alcance al tiempo semanal disponible.
+- Cuando falten datos, usá hasta 3 supuestos explícitos.
+- Escribí en español claro (rioplatense/neutral).
+- Respondé SOLO con JSON válido, sin markdown ni texto extra.
 `.trim();
 
-  const user = `
-Datos del usuario:
+  const userPrompt = `
+Inputs del usuario:
 - Habilidades actuales: ${habilidades}
 - Objetivo: ${objetivo}
 - Industrias de interés: ${industria}
 - Tiempo disponible por semana: ${tiempo}
 
-Generá UNA SkillSynth Card y devolvé EXCLUSIVAMENTE un JSON VÁLIDO con esta estructura (sin texto extra, sin markdown):
+Generá UNA SkillSynth Card profunda y profesional.
+
+Devolvé EXCLUSIVAMENTE un JSON válido con esta estructura EXACTA:
 
 {
   "skill_name": "",
+  "tagline": "",
+  "ideal_for": [""],
+  "problem_it_solves": ["", "", ""],
   "description_short": "",
-  "why_valuable": "",
+  "why_valuable": ["", "", "", ""],
+  "target_clients": [
+    {
+      "segment": "",
+      "pain": "",
+      "desired_outcome": ""
+    }
+  ],
+  "offers": [
+    {
+      "name": "",
+      "for_whom": "",
+      "deliverables": ["", "", ""],
+      "time_to_deliver": "",
+      "price_usd": "",
+      "proof_of_value_metric": ""
+    }
+  ],
   "niches": [""],
   "salary_range": {
-    "latam_usd": "",
-    "usa_usd": ""
+    "latam_usd_month": "",
+    "global_usd_month": ""
   },
-  "tasks": [""],
   "tools_needed": [""],
-  "day_30_plan": [
-    { "week": 1, "focus": "", "tasks": ["", "", ""] },
-    { "week": 2, "focus": "", "tasks": ["", "", ""] },
-    { "week": 3, "focus": "", "tasks": ["", "", ""] },
-    { "week": 4, "focus": "", "tasks": ["", "", ""] }
+  "portfolio_project": {
+    "name": "",
+    "brief": "",
+    "steps": ["", "", "", "", ""],
+    "final_outputs": ["", "", ""]
+  },
+  "30_day_plan": [
+    { "week": 1, "goal": "", "tasks": ["", "", ""] },
+    { "week": 2, "goal": "", "tasks": ["", "", ""] },
+    { "week": 3, "goal": "", "tasks": ["", "", ""] },
+    { "week": 4, "goal": "", "tasks": ["", "", ""] }
   ],
-  "brand_names": ["", "", ""]
+  "content_engine": {
+    "positioning_statement": "",
+    "hooks": ["", "", "", "", ""],
+    "post_ideas": ["", "", "", "", ""]
+  },
+  "discovery_questions": ["", "", "", "", ""],
+  "brand_names": ["", "", ""],
+  "quality_check": {
+    "specificity_score_0_10": 0,
+    "notes": ""
+  }
 }
 
-Criterios:
-- skill_name: 4 a 7 palabras, claro y vendible.
-- description_short: 3–5 líneas.
-- why_valuable: 3–5 bullets en texto (separados por saltos de línea).
-- niches: 5 nichos concretos.
-- salary_range: rangos mensuales en USD (latam y global) razonables.
-- tasks: 6–10 tareas que esa habilidad permite ofrecer.
-- tools_needed: 6–10 herramientas/plataformas sugeridas.
-- day_30_plan: 3 tareas por semana, adaptadas al tiempo disponible.
-- brand_names: 3 nombres de marca/proyecto cortos.
+Criterios de calidad obligatorios:
+- skill_name: 4–8 palabras, claro y vendible.
+- tagline: 1 línea concreta y potente.
+- ideal_for: 3 perfiles claros.
+- problem_it_solves: problemas reales y específicos.
+- target_clients: mínimo 3 segmentos distintos.
+- offers: mínimo 3 (Starter / Growth / Premium).
+- Cada offer debe tener entregables claros y una métrica de valor.
+- portfolio_project: publicable en LinkedIn, Notion o GitHub.
+- 30_day_plan: realista para el tiempo disponible.
+- quality_check: score honesto + qué se podría mejorar.
+
+Si algo es ambiguo, aclaralo en quality_check.notes como "Supuesto:".
 `.trim();
 
   try {
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1",
+      temperature: 0.4,
       messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
-      temperature: 0.6,
-      // Para forzar JSON: si tu modelo lo soporta, esto reduce muchísimo los "```json"
       response_format: { type: "json_object" },
     });
 
@@ -98,7 +143,7 @@ Criterios:
     try {
       json = JSON.parse(raw);
     } catch (e) {
-      // fallback por si igual viniera con texto
+      // fallback defensivo
       const cleaned = raw
         .replace(/```json/gi, "")
         .replace(/```/g, "")
@@ -110,7 +155,7 @@ Criterios:
   } catch (error) {
     console.error("Error en /api/compose:", error);
     return res.status(500).json({
-      error: "Error al comunicarse con el modelo de IA.",
+      error: "Error al generar la SkillSynth Card",
       detail: error?.message || "Sin detalle",
     });
   }
